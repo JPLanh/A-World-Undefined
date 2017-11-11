@@ -77,7 +77,12 @@ class Window(QtGui.QMainWindow):
             self.setGeometry(50, 50, 500, 300)        
 
     def mapTest(self):
-        myMap.getShortestDistance(5)
+        myMap.removeEdge(5, 'south')
+        myMap.removeEdge(5, 'east')
+
+        for x in myMap.vert_dict:
+            print('%s' %(myMap.vert_dict[x]))
+        myMap.getShortestDistance(10)
         
 def run():
     app = QtGui.QApplication(sys.argv)
