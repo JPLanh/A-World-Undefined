@@ -32,24 +32,6 @@ class Window(QtGui.QMainWindow):
         textArea.move(0,200)
 
         self.mapTest()
-#        myMap.add_edge('1', '2', 1)
-#        print('[%s]' %(myMap.getVertex('0')))
-#        print('[%s]' %(myMap.getVertex('50')))
-#        print('[%s]' %(myMap.getVertex('99')))
-#        print('[%s]' %(myMap.getVertex('9900')))
-#        print('[%s]' %(myMap.getVertex('9950')))
-#        print('[%s]' %(myMap.getVertex('9999')))
-#        print('[%d]' %(myMap.cords_conv(5, 2)))
-#        print('[%s]' %(myMap.map_navigation(32, 'northwest')))
-#        for v in l1:
-#            for w in v.get_connections():
-#                vid = v.get_id()
- #               wid = w.get_id()
- #               print '( %s, %s, %3d)' %(vid, wid, v.get_weight(w))
-
- #       for v in l1:
- #           print 'l1.vert_dict[%s] = %s' %(v.get_id(), l1.vert_dict[v.get_id()])
-        
         self.home()
 
     def home(self): 
@@ -82,7 +64,7 @@ class Window(QtGui.QMainWindow):
 
         for x in myMap.vert_dict:
             print('%s' %(myMap.vert_dict[x]))
-        myMap.getShortestDistance(10)
+        print('%s' %myMap.getShortestDistance(5)[10].distance)
         
 def run():
     app = QtGui.QApplication(sys.argv)
