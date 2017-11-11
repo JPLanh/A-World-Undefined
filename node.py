@@ -51,12 +51,9 @@ class Graph:
             return None
 
     def addEdge(self, frm, to, cost= 0):
-
         self.vert_dict[frm].addNeighbor(self.vert_dict[to], cost)
-        self.vert_dict[to].addNeighbor(self.vert_dict[frm], cost)
 
     def removeEdge(self, frm, direction):
-        print(self.mapNavigation(int(frm), direction))
         self.vert_dict[frm].removeNeighbor(self.mapNavigation(int(frm), direction))
 
     def cordsConversion(self, x, y):
