@@ -164,6 +164,5 @@ class Graph:
                 if disComparison <  float(distances[x.id].distance):
                     vertexQueue.put(self.DijkstraDistance(x.id, disComparison))
                     distances[x.id].distance = disComparison
-
-        for x in distances:
-            print('%s: %s' %(x, distances[x].distance))
+                    
+        return distances
