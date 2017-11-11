@@ -64,7 +64,8 @@ class Window(QtGui.QMainWindow):
 
         for x in myMap.vert_dict:
             print('%s' %(myMap.vert_dict[x]))
-        print('%s' %myMap.getShortestDistance(5)[10].distance)
+        shortDist, shortPath = myMap.getShortestDistance(5)
+        print('%s' %shortDist[10].distance)
         
 def run():
     app = QtGui.QApplication(sys.argv)
