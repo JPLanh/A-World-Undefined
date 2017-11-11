@@ -147,8 +147,8 @@ class Graph:
     def getShortestDistance(self, source):
         vertexQueue = queue.PriorityQueue()
         distances = {}
-
-        #initialize all distances to 0
+        nextNode = {}
+        
         distances[source] = self.DijkstraDistance(source, 0)
         for x in range(0, len(self.vert_dict)):
             if x <> source:
@@ -163,6 +163,7 @@ class Graph:
                 disComparison = float(distances[tempNode.id].distance) + float(tempNode.getWeight(x))
                 if disComparison <  float(distances[x.id].distance):
                     vertexQueue.put(self.DijkstraDistance(x.id, disComparison))
+                    nextNode[x.id] = tempNode.id
                     distances[x.id].distance = disComparison
                     
-        return distances
+        return distances, nextNode
