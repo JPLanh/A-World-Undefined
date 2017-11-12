@@ -180,9 +180,10 @@ class Graph:
             else: return -1
 
     class DijkstraDistance:
-        def __init__(self, vertex, distance):
+        def __init__(self, vertex, distance, nextNode):
             self.vertex = vertex
             self.distance = distance
+            self.nextNode = nextNode
 
         def __str__(self):
             return str(self.distance)
@@ -191,15 +192,12 @@ class Graph:
         a = datetime.datetime.now()
         vertexQueue = queue.PriorityQueue()
         distances = {}
-        nextNode = {}
         
-        distances[source] = self.DijkstraDistance(source, 0)
-        nextNode[source] = 'x'
+        distances[source] = self.DijkstraDistance(source, 0, 'x')
         for x in range(0, len(self.vert_dict)):
             if x <> source:
-                distances[x] = self.DijkstraDistance(x, sys.maxint)
-                nextNode[x] = 'b'
-            vertexQueue.put(self.DijkstraDistance(x, sys.maxint))
+                distances[x] = self.DijkstraDistance(x, sys.maxint, 'x')
+            vertexQueue.put(self.DijkstraDistance(x, sys.maxint, 'x'))
 
         while (vertexQueue.qsize() > 1):
             tempDijk = vertexQueue.get(True)
@@ -208,16 +206,22 @@ class Graph:
                 currentNode = self.vert_dict[x.id]
                 disComparison = float(distances[tempNode.id].distance) + float(tempNode.getWeight(x))
                 if disComparison <  float(distances[x.id].distance):
-                    vertexQueue.put(self.DijkstraDistance(x.id, disComparison))
-                    nextNode[x.id] = tempNode.id
+                    vertexQueue.put(self.DijkstraDistance(x.id, disComparison, tempNode.id))
                     distances[x.id].distance = disComparison
+                    distances[x.id].nextNode = tempNode.id
 
 
         b = datetime.datetime.now()
         print(b-a)
-        self.printSet(distances, nextNode)
-        return distances, nextNode
+        self.printSet(distances)
+        return distances
 
+    def printSet(self, distances):
+        for y in range(0, self.height):
+            for x in range(0, self.width):
+                print('%3s: %4s [%4s]' %(self.cordsConversion(x, y), distances[self.cordsConversion(x,y)], distances[self.cordsConversion(x,y)].nextNode)),
+            print('')
+                
     def getExits(self, xPos, yPos = None):
         if yPos is None:
             print('%s: ' %xPos),
@@ -246,7 +250,6 @@ class Graph:
     def movePerson(self, person, direction):
         frm = self.cordsConversion(person.x, person.y)
         toX, toY = self.cordsConversion(self.mapNavigation(frm, direction))
-        print('%s, %s' %(toX, toY))
         if self.vert_dict[self.cordsConversion(toX, toY)].existance is None:
             for x in self.vert_dict[frm].getNeighbors():
                 if x.id == self.cordsConversion(toX, toY):        
@@ -254,4 +257,5 @@ class Graph:
                     self.putExistance(person, toX, toY)
                     self.removeExistance(frm)
                     return toX, toY
+            return person.x, person.y
         else: return person.x, person.y
