@@ -1,10 +1,13 @@
 import sys
 import Queue as queue
+import datetime
+import person
 
 class Vertex:
     def __init__(self, node):
         self.id = node
         self.adjacent = {}
+        self.existance = None;
 
     def __str__(self):
         return str(self.id)
@@ -12,16 +15,15 @@ class Vertex:
     def addNeighbor(self, neighbor, weight=0):
         self.adjacent[neighbor] = weight
 
-    def removeNeighbor(self, neighbor):
-        print('removing %s from %s' %(str(neighbor), self.id))
-        for x in self.adjacent:
-            if str(neighbor) == x.id:
-                del self.adjacent[x]
-                break
-        
     def getNeighbors(self):
         return self.adjacent.keys()
 
+    def removeNeighbor(self, neighbor):
+        for x in self.adjacent:
+            if neighbor == x.id:
+                del self.adjacent[x]
+                break
+            
     def getID(self):
         return self.id
 
@@ -34,7 +36,6 @@ class Graph:
         self.width = width
         self.height = height
         self.generateMap()
-        self.getShortestDistance(12)
 
     def __iter__(self):
         return iter(self.vert_dict.values())
@@ -53,11 +54,50 @@ class Graph:
     def addEdge(self, frm, to, cost= 0):
         self.vert_dict[frm].addNeighbor(self.vert_dict[to], cost)
 
-    def removeEdge(self, frm, direction):
-        self.vert_dict[frm].removeNeighbor(self.mapNavigation(int(frm), direction))
+    #Can Enter into frm from specific direction
+    def addEdgesFrom(self, frm, direction, cost = 0):
+        if direction == 'all':
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'east')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
+            self.vert_dict[self.mapNavigation(frm, 'east')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'west')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'south')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'north')].addNeighbor(frm)
+        elif direction == 'into':
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'east')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
+        else:            
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, direction)], cost)
+        
 
-    def cordsConversion(self, x, y):
-        return (y * self.width) + x
+    #Can't Enter into frm from specific direction
+    def removeEdgesFrom(self, frm, direction):
+        if direction == 'all':
+            self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'east'))
+            self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'west'))
+            self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'south'))
+            self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'north'))
+            self.vert_dict[self.mapNavigation(frm, 'east')].removeNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'west')].removeNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'south')].removeNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'north')].removeNeighbor(frm)
+        elif direction == 'into':
+            self.vert_dict[self.mapNavigation(frm, 'east')].removeNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'west')].removeNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'south')].removeNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'north')].removeNeighbor(frm)
+        else:
+            self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, direction))
+
+    def cordsConversion(self, x, y = None):
+        if y is None:
+            return x % self.width, x / self.width
+        else:
+            return (y * self.width) + x
 
     def generateMap(self):
         for y in range(0, self.height):
@@ -144,15 +184,21 @@ class Graph:
             self.vertex = vertex
             self.distance = distance
 
-    def getShortestDistance(self, source):
+        def __str__(self):
+            return str(self.distance)
+
+    def getAllShortestDistance(self, source):
+        a = datetime.datetime.now()
         vertexQueue = queue.PriorityQueue()
         distances = {}
         nextNode = {}
         
         distances[source] = self.DijkstraDistance(source, 0)
+        nextNode[source] = 'x'
         for x in range(0, len(self.vert_dict)):
             if x <> source:
                 distances[x] = self.DijkstraDistance(x, sys.maxint)
+                nextNode[x] = 'b'
             vertexQueue.put(self.DijkstraDistance(x, sys.maxint))
 
         while (vertexQueue.qsize() > 1):
@@ -165,5 +211,47 @@ class Graph:
                     vertexQueue.put(self.DijkstraDistance(x.id, disComparison))
                     nextNode[x.id] = tempNode.id
                     distances[x.id].distance = disComparison
-                    
+
+
+        b = datetime.datetime.now()
+        print(b-a)
+        self.printSet(distances, nextNode)
         return distances, nextNode
+
+    def getExits(self, xPos, yPos = None):
+        if yPos is None:
+            print('%s: ' %xPos),
+            for x in self.vert_dict[xPos].getNeighbors():
+                print('%s, ' %x.id),
+        else:
+            print('%s: ' %self.cordsConversion(xPos, yPos)),
+            for x in self.vert_dict[self.cordsConversion(xPos, yPos)].getNeighbors():
+                print('%s, ' %x.id),
+                
+    def putExistance(self, person, xPos, yPos = None):
+        if yPos is None:
+            self.vert_dict[xPos].existance = person
+        else:
+            self.vert_dict[self.cordsConversion(xPos, yPos)].existance = person
+
+    def removeExistance(self, xPos, yPos = None):
+        if yPos is None:
+            self.vert_dict[xPos].existance = None
+        else:
+            self.vert_dict[self.cordsConversion(xPos, yPos)].existance = None     
+        
+    def getExistance(self, xPos, yPos):
+        return self.vert_dict[self.cordsConversion(xPos, yPos)].existance
+
+    def movePerson(self, person, direction):
+        frm = self.cordsConversion(person.x, person.y)
+        toX, toY = self.cordsConversion(self.mapNavigation(frm, direction))
+        print('%s, %s' %(toX, toY))
+        if self.vert_dict[self.cordsConversion(toX, toY)].existance is None:
+            for x in self.vert_dict[frm].getNeighbors():
+                if x.id == self.cordsConversion(toX, toY):        
+                    person = self.vert_dict[frm].existance
+                    self.putExistance(person, toX, toY)
+                    self.removeExistance(frm)
+                    return toX, toY
+        else: return person.x, person.y
