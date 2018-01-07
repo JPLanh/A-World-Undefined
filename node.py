@@ -7,7 +7,8 @@ class Vertex:
     def __init__(self, node):
         self.id = node
         self.adjacent = {}
-        self.existance = None;
+        self.existance = None
+        self.tile = None
 
     def __str__(self):
         return str(self.id)
@@ -50,6 +51,15 @@ class Graph:
             return self.vert_dict[n]
         else:
             return None
+
+    def setTile(self, arg1, arg2, arg3 = None):
+        if arg3 is None:
+            self.vert_dict[arg1].tile = arg2
+        else:
+            self.vert_dict[self.cordsConversion(arg1, arg2)].tile = arg3
+        
+    def getTile(self, n):
+        return self.vert_dict[n].tile
 
     def addEdge(self, frm, to, cost= 0):
         self.vert_dict[frm].addNeighbor(self.vert_dict[to], cost)
@@ -103,7 +113,14 @@ class Graph:
         for y in range(0, self.height):
             for x in range(0, self.width):
                 self.addVertex(self.cordsConversion(x, y))
+                self.vert_dict[self.cordsConversion(x, y)].tile = 'Grass'
 
+        self.setTile(7, 2, 'Dirt')
+        self.setTile(7, 3, 'Dirt')
+        self.setTile(7, 4, 'Dirt')
+        self.setTile(7, 5, 'Dirt')
+        self.setTile(7, 6, 'Dirt')
+        
         for y in range(0, self.height):
             for x in range(0, self.width):
                 self.addEdge(self.cordsConversion(x, y),

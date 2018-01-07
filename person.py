@@ -9,6 +9,7 @@ class Person:
         self.myMap = myMap
         self.myMap.putExistance(self, xPos, yPos)
         self.generateBody();
+        self.image = 'img/person.png'
 
     def __str__(self):
         return "%s exists in pos (%d, %d)" %(self.name, self.x, self.y)
