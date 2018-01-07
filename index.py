@@ -66,7 +66,7 @@ def game_loop():
         start = True
       elif event.type == pygame.KEYDOWN:
         if event.key == pygame.K_j:
-          mapOne.checkEnterable(506)
+          print(mapOne.checkEnterable(506))
             
         if event.key == pygame.K_a:
             playerView.vel.x = +10

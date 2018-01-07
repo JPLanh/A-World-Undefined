@@ -29,6 +29,9 @@ class Person(pygame.sprite.Sprite):
         window.blit(self.image, self.pos+playerView.cameraPos)
             
     def update(self, playerView):
+        if self.moveProgress.x == 0 and self.moveProgress.y == 0:
+            self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
+            self.myMap.removeEdgesFrom(self.position, 'into')
         if not self.currentPath:
             if self.newOrders.x != 0 and self.newOrders.y != 0:
                 self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))                
@@ -42,10 +45,8 @@ class Person(pygame.sprite.Sprite):
                 self.currentPath = None
             else:
                 if self.moveProgress.x == 0 and self.moveProgress.y == 0:
-                    self.myMap.addEdgesFrom(self.position, 'into') 
-                    self.myMap.removeEdgesFrom(self.currentPath, 'into')
-                    #not creating the edges to go into
-                    self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))                    
+                    self.myMap.addEdgesFrom(self.position, 'all')
+                    self.myMap.removeEdgesFrom(self.currentPath, 'into')                     
                     if math.floor(self.position + 1) == self.currentPath:
                         self.moveProgress.x = 45
                     elif math.floor(self.position - 1) == self.currentPath:
