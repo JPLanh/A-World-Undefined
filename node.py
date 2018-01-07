@@ -86,27 +86,27 @@ class Graph:
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
             self.vert_dict[self.mapNavigation(frm, 'east')].addNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'west')].addNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'south')].addNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'north')].addNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'northeast')].addNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'southwest')].addNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'southeast')].addNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'northwest')].addNeighbor(frm)
+#            self.vert_dict[self.mapNavigation(frm, 'northeast')].addNeighbor(frm)
+#            self.vert_dict[self.mapNavigation(frm, 'southwest')].addNeighbor(frm)
+#            self.vert_dict[self.mapNavigation(frm, 'southeast')].addNeighbor(frm)
+#            self.vert_dict[self.mapNavigation(frm, 'northwest')].addNeighbor(frm)
         elif direction == 'into':
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'east')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
+#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
         else:            
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, direction)], cost)
         
@@ -228,8 +228,6 @@ class Graph:
             else: return -1
 
     def aStar(self, source, goal):
-        #queues = Queue.PriorityQueue()
-        #queues.put(source, 0)
         queues = PriorityQueue()
         queues.put(source, 0)
         came_from = {}
@@ -253,13 +251,22 @@ class Graph:
         return came_from, currentCost
 
     def shortestPath(self, start, goal):
-        cameFrom, currentCost = self.aStar(start, goal)
-        current = goal
-        path = []
-        while current != start:
-            path.append(current)
-            current = cameFrom[current]
-        return path
+        if self.checkEnterable(goal):
+            cameFrom, currentCost = self.aStar(start, goal)
+            current = goal
+            path = []
+            while current != start:
+                path.append(current)
+                current = cameFrom[current]
+            return path
+
+    def checkEnterable(self, check):
+        pathsInto = []
+        for checking in self.vert_dict[check].getNeighbors():
+            for checkingNext in self.vert_dict[checking.id].getNeighbors():
+                if checkingNext.id == check:
+                    pathsInto.append(checkingNext.id)
+        return pathsInto
 
     def printSet(self, distances):
         for y in range(0, self.height):

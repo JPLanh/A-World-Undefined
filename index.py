@@ -66,7 +66,7 @@ def game_loop():
         start = True
       elif event.type == pygame.KEYDOWN:
         if event.key == pygame.K_j:
-          print("debug option")
+          mapOne.checkEnterable(506)
             
         if event.key == pygame.K_a:
             playerView.vel.x = +10
@@ -91,11 +91,10 @@ def game_loop():
             playerX, playerY, playerWidth, playerHeight = player.rect
             if mouseX > playerX+cameraX and mouseX < playerX+playerWidth+cameraX:
               if mouseY > playerY+cameraY and mouseY < playerY+playerHeight+cameraY:
-                #menuGui.active = True
                 playerView.focusPlayer = player
                 print(player.name)
         elif event.button == 3:
-          if playerView.focusPlayer != None:
+          if playerView.focusPlayer != None:            
             playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
 
 #      elif event.type == pygame.MOUSEBUTTONUP:

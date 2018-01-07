@@ -36,13 +36,16 @@ class Person(pygame.sprite.Sprite):
                 self.path = self.myMap.shortestPath(self.position, destination)
                 self.newOrders = pygame.math.Vector2(0, 0)
             if self.path:
-                self.currentPath = self.path.pop()
+                self.currentPath = self.path.pop()               
         else:
             if self.position == self.currentPath:
                 self.currentPath = None
             else:
                 if self.moveProgress.x == 0 and self.moveProgress.y == 0:
-                    self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))                
+                    self.myMap.addEdgesFrom(self.position, 'into') 
+                    self.myMap.removeEdgesFrom(self.currentPath, 'into')
+                    #not creating the edges to go into
+                    self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))                    
                     if math.floor(self.position + 1) == self.currentPath:
                         self.moveProgress.x = 45
                     elif math.floor(self.position - 1) == self.currentPath:
