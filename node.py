@@ -1,16 +1,19 @@
 import sys
-import Queue as queue
+from multiprocessing import Queue
+import heapq
 import datetime
-import person
+import Person
 
 class Vertex:
     def __init__(self, node):
         self.id = node
         self.adjacent = {}
-        self.existance = None;
+        self.existance = None
+        self.tile = None
+        self.menuOptions = {}
 
     def __str__(self):
-        return str(self.id)
+        return "vertex: " + str(self.id)
 
     def addNeighbor(self, neighbor, weight=0):
         self.adjacent[neighbor] = weight
@@ -30,6 +33,19 @@ class Vertex:
     def getWeight(self, neighbor):
         return self.adjacent[neighbor]
 
+class PriorityQueue:
+    def __init__(self):
+        self.elements = []
+    
+    def empty(self):
+        return len(self.elements) == 0
+    
+    def put(self, item, priority):
+        heapq.heappush(self.elements, (priority, item))
+    
+    def get(self):
+        return heapq.heappop(self.elements)[1]
+    
 class Graph:
     def __init__(self, width, height):
         self.vert_dict = {}
@@ -51,6 +67,15 @@ class Graph:
         else:
             return None
 
+    def setTile(self, arg1, arg2, arg3 = None):
+        if arg3 is None:
+            self.vert_dict[arg1].tile = arg2
+        else:
+            self.vert_dict[self.cordsConversion(arg1, arg2)].tile = arg3
+        
+    def getTile(self, n):
+        return self.vert_dict[n].tile
+
     def addEdge(self, frm, to, cost= 0):
         self.vert_dict[frm].addNeighbor(self.vert_dict[to], cost)
 
@@ -61,15 +86,27 @@ class Graph:
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
             self.vert_dict[self.mapNavigation(frm, 'east')].addNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'west')].addNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'south')].addNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'north')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'northeast')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'southwest')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'southeast')].addNeighbor(frm)
+            self.vert_dict[self.mapNavigation(frm, 'northwest')].addNeighbor(frm)
         elif direction == 'into':
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'east')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
+            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
         else:            
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, direction)], cost)
         
@@ -103,7 +140,18 @@ class Graph:
         for y in range(0, self.height):
             for x in range(0, self.width):
                 self.addVertex(self.cordsConversion(x, y))
+                self.vert_dict[self.cordsConversion(x, y)].tile = 'Grass'
+                self.vert_dict[self.cordsConversion(x, y)].menuOptions[0] = 'Walk'                
 
+        self.setTile(7, 2, 'Dirt')
+        self.setTile(7, 3, 'Dirt')
+        self.setTile(7, 4, 'Dirt')
+        self.setTile(7, 5, 'Dirt')
+        self.setTile(7, 6, 'Dirt')
+        self.vert_dict[self.cordsConversion(7, 2)].menuOptions[1] = 'Test'
+        self.vert_dict[self.cordsConversion(7, 2)].menuOptions[2] = 'Auto run'
+        self.vert_dict[self.cordsConversion(7, 3)].menuOptions[1] = 'Crawl'
+        
         for y in range(0, self.height):
             for x in range(0, self.width):
                 self.addEdge(self.cordsConversion(x, y),
@@ -179,42 +227,39 @@ class Graph:
                     return (getPosition + self.width + 1) % (self.width * self.height)
             else: return -1
 
-    class DijkstraDistance:
-        def __init__(self, vertex, distance, nextNode):
-            self.vertex = vertex
-            self.distance = distance
-            self.nextNode = nextNode
+    def aStar(self, source, goal):
+        #queues = Queue.PriorityQueue()
+        #queues.put(source, 0)
+        queues = PriorityQueue()
+        queues.put(source, 0)
+        came_from = {}
+        currentCost = {}
+        came_from[source] = None
+        currentCost[source] = 0
 
-        def __str__(self):
-            return str(self.distance)
+        while not queues.empty():
+            current = queues.get()
 
-    def getAllShortestDistance(self, source):
-        a = datetime.datetime.now()
-        vertexQueue = queue.PriorityQueue()
-        distances = {}
-        
-        distances[source] = self.DijkstraDistance(source, 0, 'x')
-        for x in range(0, len(self.vert_dict)):
-            if x <> source:
-                distances[x] = self.DijkstraDistance(x, sys.maxint, 'x')
-            vertexQueue.put(self.DijkstraDistance(x, sys.maxint, 'x'))
+            if current == goal:
+                break
+            
+            for next in self.vert_dict[current].getNeighbors():
+                newCost = currentCost[current] + self.vert_dict[current].getWeight(next)
+                if next.id not in came_from or newCost < currentCost[next.id]:
+                    currentCost[next.id] = newCost
+                    priority = newCost
+                    queues.put(next.id, priority)
+                    came_from[next.id] = current
+        return came_from, currentCost
 
-        while (vertexQueue.qsize() > 1):
-            tempDijk = vertexQueue.get(True)
-            tempNode = self.vert_dict[tempDijk.vertex]
-            for x in tempNode.getNeighbors():
-                currentNode = self.vert_dict[x.id]
-                disComparison = float(distances[tempNode.id].distance) + float(tempNode.getWeight(x))
-                if disComparison <  float(distances[x.id].distance):
-                    vertexQueue.put(self.DijkstraDistance(x.id, disComparison, tempNode.id))
-                    distances[x.id].distance = disComparison
-                    distances[x.id].nextNode = tempNode.id
-
-
-        b = datetime.datetime.now()
-        print(b-a)
-        self.printSet(distances)
-        return distances
+    def shortestPath(self, start, goal):
+        cameFrom, currentCost = self.aStar(start, goal)
+        current = goal
+        path = []
+        while current != start:
+            path.append(current)
+            current = cameFrom[current]
+        return path
 
     def printSet(self, distances):
         for y in range(0, self.height):
@@ -259,3 +304,13 @@ class Graph:
                     return toX, toY
             return person.x, person.y
         else: return person.x, person.y
+
+    def smartMovePerson(self, person, goal):
+        current = self.cordsConversion(person.x, person.y)
+        path = self.shortestPath(current, goal)
+        while path:
+            person = self.vert_dict[current].existance
+            self.removeExistance(current)
+            current = path.pop()
+            self.putExistance(person, current)
+            
