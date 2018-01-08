@@ -25,6 +25,7 @@ class Person(pygame.sprite.Sprite):
         self.currentPath = None
         self.newOrders = pygame.math.Vector2(0, 0)
         self.harvesting = None
+        self.destroy = False
         self.actionProgress = 0
         
     def draw_self(self, window, playerView):
@@ -46,7 +47,7 @@ class Person(pygame.sprite.Sprite):
                 if self.harvesting:
                     self.actionProgress += 25
                     if self.actionProgress > 99:
-                        self.harvesting.harvested()
+                        self.harvesting.destroy = True
                         self.harvesting = None
             if self.path:
                 #has places to go

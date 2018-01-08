@@ -51,6 +51,10 @@ def updates():
   playerView.update()
   gameDisplay.blit(BACKGROUND, (0, 0)+playerView.cameraPos)
   for entities in allEntity:
+    if entities.destroy:
+      if isinstance(entities, Resources.Tree):
+        allEntity.append(Resources.Log(mapOne, (entities.pos.x, entities.pos.y), playerView))        
+        allEntity.remove(entities)
     entities.update(playerView)
     entities.draw_self(gameDisplay, playerView)
   pygame.display.flip()
