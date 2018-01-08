@@ -95,10 +95,6 @@ class Graph:
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
-#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northeast')], cost)
-#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southwest')], cost)
-#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'southeast')], cost)
-#            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'northwest')], cost)
         else:            
             self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, direction)], cost)
         
@@ -250,7 +246,18 @@ class Graph:
             while current != start:
                 path.append(current)
                 current = cameFrom[current]
-            return path
+        else:
+            self.addEdgesFrom(goal, 'all')
+            cameFrom, currentCost = self.aStar(start, goal)
+            self.removeEdgesFrom(goal, 'into')
+            current = goal
+            path = []
+            while current != start:
+                path.append(current)
+                current = cameFrom[current]
+            path[0] = "f%d" %(path[0])
+            print(path[0])
+        return path
 
     def checkEnterable(self, check):
         pathsInto = []

@@ -24,40 +24,69 @@ class Person(pygame.sprite.Sprite):
         self.path = []
         self.currentPath = None
         self.newOrders = pygame.math.Vector2(0, 0)
+        self.harvesting = None
+        self.actionProgress = 0
         
     def draw_self(self, window, playerView):
         window.blit(self.image, self.pos+playerView.cameraPos)
             
     def update(self, playerView):
         if self.moveProgress.x == 0 and self.moveProgress.y == 0:
+            #Constantly updating position
             self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
             self.myMap.removeEdgesFrom(self.position, 'into')
         if not self.currentPath:
+            #Given a new destination
             if self.newOrders.x != 0 and self.newOrders.y != 0:
                 self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))                
                 destination = self.myMap.cordsConversion(math.floor(self.newOrders.x/42), math.floor(self.newOrders.y/42))                     
                 self.path = self.myMap.shortestPath(self.position, destination)
                 self.newOrders = pygame.math.Vector2(0, 0)
+            elif self.newOrders.x == 0 and self.newOrders.y == 0 and not self.path:
+                if self.harvesting:
+                    self.actionProgress += 25
+                    if self.actionProgress > 99:
+                        self.harvesting.harvested()
+                        self.harvesting = None
             if self.path:
+                #has places to go
                 self.currentPath = self.path.pop()               
         else:
+            #If it reach to it's destination at each node
             if self.position == self.currentPath:
                 self.currentPath = None
             else:
+                #determine the direction to move
                 if self.moveProgress.x == 0 and self.moveProgress.y == 0:
-                    self.myMap.addEdgesFrom(self.position, 'all')
-                    self.myMap.removeEdgesFrom(self.currentPath, 'into')                     
-                    if math.floor(self.position + 1) == self.currentPath:
-                        self.moveProgress.x = 45
-                    elif math.floor(self.position - 1) == self.currentPath:
-                        self.moveProgress.x = -45
-                    elif math.floor(self.position - 100) == self.currentPath:
-                        self.moveProgress.y = 45
-                    elif math.floor(self.position + 100) == self.currentPath:
-                        self.moveProgress.y = -45
+                    if isinstance(self.currentPath, int):
+                        self.myMap.addEdgesFrom(self.position, 'all')
+                        self.myMap.removeEdgesFrom(self.currentPath, 'into')                     
+                        if math.floor(self.position + 1) == self.currentPath:
+                            self.moveProgress.x = 45
+                        elif math.floor(self.position - 1) == self.currentPath:
+                            self.moveProgress.x = -45
+                        elif math.floor(self.position - 100) == self.currentPath:
+                            self.moveProgress.y = 45
+                        elif math.floor(self.position + 100) == self.currentPath:
+                            self.moveProgress.y = -45
+                    elif isinstance(self.currentPath, str):
+                        if math.floor(self.position + 1) == int(self.currentPath[1:]):
+                            self.rotate('right')
+                        elif math.floor(self.position - 1) == int(self.currentPath[1:]):
+                            self.rotate('left')
+                        elif math.floor(self.position - 100) == int(self.currentPath[1:]):
+                            self.rotate('up')
+                        elif math.floor(self.position + 100) == int(self.currentPath[1:]):
+                            self.rotate('down')
+                        self.currentPath = self.position
                 else:
                     self.move(playerView)
-    
+
+    def stopAction(self):
+        self.harvesting = None
+        self.newOrders = pygame.math.Vector2(0, 0)
+        self.path = []
+        
     def move(self, view):
         if self.moveProgress.x > 0:
             if self.moveProgress.x - 3 > 0:

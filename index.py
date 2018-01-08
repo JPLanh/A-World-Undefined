@@ -6,6 +6,7 @@ import node
 import mapGenerator
 import Person
 import Camera
+import Resources
 
 FRAME_WIDTH = 800
 FRAME_HEIGHT = 600
@@ -25,6 +26,7 @@ pygame.display.set_caption('A simulation')
 playerView = Camera.Camera()
 allEntity.append(Person.Person('Jimmy', mapOne, (42*5-3, 42*5-3), playerView))
 allEntity.append(Person.Person('Yurika', mapOne, (42*8-3, 42*5-3), playerView))
+allEntity.append(Resources.Tree(mapOne, (42*7, 42*7), playerView))
 
 clock = pygame.time.Clock()
 
@@ -66,7 +68,7 @@ def game_loop():
         start = True
       elif event.type == pygame.KEYDOWN:
         if event.key == pygame.K_j:
-          print(mapOne.checkEnterable(506))
+          print(mapOne.checkEnterable(707))
             
         if event.key == pygame.K_a:
             playerView.vel.x = +10
@@ -91,11 +93,25 @@ def game_loop():
             playerX, playerY, playerWidth, playerHeight = player.rect
             if mouseX > playerX+cameraX and mouseX < playerX+playerWidth+cameraX:
               if mouseY > playerY+cameraY and mouseY < playerY+playerHeight+cameraY:
-                playerView.focusPlayer = player
-                print(player.name)
+                if isinstance(player, Person.Person):
+                  playerView.focusPlayer = player
         elif event.button == 3:
-          if playerView.focusPlayer != None:            
-            playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
+          if playerView.focusPlayer:
+            playerView.focusPlayer.stopAction()
+            movable = True
+            for player in allEntity:
+              playerX, playerY, playerWidth, playerHeight = player.rect
+              if mouseX > playerX+cameraX and mouseX < playerX+playerWidth+cameraX:
+                if mouseY > playerY+cameraY and mouseY < playerY+playerHeight+cameraY:
+                  movable = False
+                  if isinstance(player, Person.Person):
+                    print("move to a person")
+                  elif isinstance(player, Resources.Tree):
+                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
+                    playerView.focusPlayer.harvesting = player
+                    print("harvest tree")
+            if movable:
+              playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
 
 #      elif event.type == pygame.MOUSEBUTTONUP:
 #        mouseX, mouseY = pygame.mouse.get_pos()
