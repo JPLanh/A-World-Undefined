@@ -27,7 +27,9 @@ playerView = Camera.Camera()
 allEntity.append(Person.Person('Jimmy', mapOne, (42*5-3, 42*5-3), playerView))
 allEntity.append(Person.Person('Yurika', mapOne, (42*8-3, 42*5-3), playerView))
 allEntity.append(Resources.Tree(mapOne, (42*7, 42*7), playerView))
-
+allEntity.append(Resources.Tree(mapOne, (42*8, 42*8), playerView))
+allEntity.append(Resources.Tree(mapOne, (42*9, 42*9), playerView))
+allEntity.append(Resources.Tree(mapOne, (42*10, 42*10), playerView))
 clock = pygame.time.Clock()
 
 def text():
@@ -51,11 +53,7 @@ def updates():
   playerView.update()
   gameDisplay.blit(BACKGROUND, (0, 0)+playerView.cameraPos)
   for entities in allEntity:
-    if entities.destroy:
-      if isinstance(entities, Resources.Tree):
-        allEntity.append(Resources.Log(mapOne, (entities.pos.x, entities.pos.y), playerView))        
-        allEntity.remove(entities)
-    entities.update(playerView)
+    entities.update(playerView, allEntity)
     entities.draw_self(gameDisplay, playerView)
   pygame.display.flip()
 
@@ -113,7 +111,13 @@ def game_loop():
                   elif isinstance(player, Resources.Tree):
                     playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
                     playerView.focusPlayer.harvesting = player
-                    print("harvest tree")
+                  elif isinstance(player, Resources.Log):
+                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
+                    playerView.focusPlayer.harvesting = player
+                  elif isinstance(player, Resources.Trunk):
+                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
+                    playerView.focusPlayer.harvesting = player
+                  break
             if movable:
               playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
 

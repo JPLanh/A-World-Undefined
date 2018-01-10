@@ -31,7 +31,7 @@ class Person(pygame.sprite.Sprite):
     def draw_self(self, window, playerView):
         window.blit(self.image, self.pos+playerView.cameraPos)
             
-    def update(self, playerView):
+    def update(self, playerView, entityList):
         if self.moveProgress.x == 0 and self.moveProgress.y == 0:
             #Constantly updating position
             self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
@@ -45,9 +45,16 @@ class Person(pygame.sprite.Sprite):
                 self.newOrders = pygame.math.Vector2(0, 0)
             elif self.newOrders.x == 0 and self.newOrders.y == 0 and not self.path:
                 if self.harvesting:
-                    self.actionProgress += 25
-                    if self.actionProgress > 99:
-                        self.harvesting.destroy = True
+                    self.harvesting.durability -= 1                    
+                    if self.harvesting.durability < 1:
+                        if self.position+1 == self.harvesting.position:
+                            self.harvesting.destroy = "east"
+                        elif self.position-1 == self.harvesting.position:
+                            self.harvesting.destroy = "west"
+                        elif self.position-100 == self.harvesting.position:
+                            self.harvesting.destroy = "north"
+                        elif self.position+100 == self.harvesting.position:
+                            self.harvesting.destroy = "south"
                         self.harvesting = None
             if self.path:
                 #has places to go
