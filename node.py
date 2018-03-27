@@ -52,6 +52,8 @@ class Graph:
         self.width = width
         self.height = height
         self.generateMap()
+        self.entityList = []
+        self.peopleList = []
 
     def __iter__(self):
         return iter(self.vert_dict.values())
@@ -80,28 +82,44 @@ class Graph:
         self.vert_dict[frm].addNeighbor(self.vert_dict[to], cost)
 
     #Can Enter into frm from specific direction
-    def addEdgesFrom(self, frm, direction, cost = 0):
-        if direction == 'all':
-            self.addEdge(frm, self.mapNavigation(frm, 'north'), 1)
-            self.addEdge(frm, self.mapNavigation(frm, 'east'), 1)
-            self.addEdge(frm, self.mapNavigation(frm, 'south'), 1)
-            self.addEdge(frm, self.mapNavigation(frm, 'west'), 1)
-            self.addEdge(self.mapNavigation(frm, 'north'), frm, 1)
-            self.addEdge(self.mapNavigation(frm, 'east'), frm, 1)
-            self.addEdge(self.mapNavigation(frm, 'south'), frm, 1)
-            self.addEdge(self.mapNavigation(frm, 'west'), frm, 1)
-        elif direction == 'into':
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'east')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'west')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'south')], cost)
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, 'north')], cost)
-        else:            
-            self.vert_dict[frm].addNeighbor(self.vert_dict[self.mapNavigation(frm, direction)], cost)
-        
+    def addEdgesFrom(self, frm, direction, cost = None, checker = None):
+        if not cost:
+            if direction == 'all':
+                self.addEdge(self.mapNavigation(frm, 'north'), frm, 1)
+                self.addEdge(self.mapNavigation(frm, 'east'), frm, 1)
+                self.addEdge(self.mapNavigation(frm, 'south'), frm, 1)
+                self.addEdge(self.mapNavigation(frm, 'west'), frm, 1)
+                if self.checkEnterable(self.mapNavigation(frm, 'north')):
+                    self.addEdge(frm, self.mapNavigation(frm, 'north'), 1)
+                if self.checkEnterable(self.mapNavigation(frm, 'east')):
+                    self.addEdge(frm, self.mapNavigation(frm, 'east'), 1)
+                if self.checkEnterable(self.mapNavigation(frm, 'south')):
+                    self.addEdge(frm, self.mapNavigation(frm, 'south'), 1)
+                if self.checkEnterable(self.mapNavigation(frm, 'west')):        
+                    self.addEdge(frm, self.mapNavigation(frm, 'west'), 1)
+        else:
+            if direction == 'all':
+                self.addEdge(self.mapNavigation(frm, 'west'), frm, 1)        
+                self.addEdge(self.mapNavigation(frm, 'north'), frm, 1)
+                self.addEdge(self.mapNavigation(frm, 'east'), frm, 1)
+                self.addEdge(self.mapNavigation(frm, 'south'), frm, 1)
+                if self.mapNavigation(frm, 'north') >= 0:
+                    if self.checkEnterable(self.mapNavigation(frm, 'north')) or cost.position == self.mapNavigation(frm, 'north'):
+                        self.addEdge(frm, self.mapNavigation(frm, 'north'), 1)
+                if self.mapNavigation(frm, 'east') >= 0:
+                    if self.checkEnterable(self.mapNavigation(frm, 'east')) or cost.position == self.mapNavigation(frm, 'east'):
+                        self.addEdge(frm, self.mapNavigation(frm, 'east'), 1)
+                if self.mapNavigation(frm, 'south') >= 0:
+                    if self.checkEnterable(self.mapNavigation(frm, 'south')) or cost.position == self.mapNavigation(frm, 'south'):
+                        self.addEdge(frm, self.mapNavigation(frm, 'south'), 1)
+                if self.mapNavigation(frm, 'west') >= 0:
+                    if self.checkEnterable(self.mapNavigation(frm, 'west')) or cost.position == self.mapNavigation(frm, 'west'):
+                        self.addEdge(frm, self.mapNavigation(frm, 'west'), 1)
 
     #Can't Enter into frm from specific direction
     def removeEdgesFrom(self, frm, direction):
         if direction == 'all':
+            #cant enter or exit
             self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'east'))
             self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'west'))
             self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, 'south'))
@@ -111,10 +129,15 @@ class Graph:
             self.vert_dict[self.mapNavigation(frm, 'south')].removeNeighbor(frm)
             self.vert_dict[self.mapNavigation(frm, 'north')].removeNeighbor(frm)
         elif direction == 'into':
-            self.vert_dict[self.mapNavigation(frm, 'east')].removeNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'west')].removeNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'south')].removeNeighbor(frm)
-            self.vert_dict[self.mapNavigation(frm, 'north')].removeNeighbor(frm)
+            #can't enter
+            if self.mapNavigation(frm, 'east') >= 0:
+                self.vert_dict[self.mapNavigation(frm, 'east')].removeNeighbor(frm)
+            if self.mapNavigation(frm, 'west') >= 0:
+                self.vert_dict[self.mapNavigation(frm, 'west')].removeNeighbor(frm)
+            if self.mapNavigation(frm, 'south') >= 0:
+                self.vert_dict[self.mapNavigation(frm, 'south')].removeNeighbor(frm)                
+            if self.mapNavigation(frm, 'north') >= 0:
+                self.vert_dict[self.mapNavigation(frm, 'north')].removeNeighbor(frm)
         else:
             self.vert_dict[frm].removeNeighbor(self.mapNavigation(frm, direction))
 
@@ -238,7 +261,7 @@ class Graph:
                     came_from[next.id] = current
         return came_from, currentCost
 
-    def shortestPath(self, start, goal):
+    def shortestPath(self, start, goal, checker = None):
         if self.checkEnterable(goal):
             cameFrom, currentCost = self.aStar(start, goal)
             current = goal
@@ -247,7 +270,7 @@ class Graph:
                 path.append(current)
                 current = cameFrom[current]
         else:
-            self.addEdgesFrom(goal, 'all')
+            self.addEdgesFrom(goal, 'all', checker)
             cameFrom, currentCost = self.aStar(start, goal)
             self.removeEdgesFrom(goal, 'into')
             current = goal
@@ -256,16 +279,52 @@ class Graph:
                 path.append(current)
                 current = cameFrom[current]
             path[0] = "f%d" %(path[0])
-            print(path[0])
         return path
 
     def checkEnterable(self, check):
         pathsInto = []
-        for checking in self.vert_dict[check].getNeighbors():
-            for checkingNext in self.vert_dict[checking.id].getNeighbors():
-                if checkingNext.id == check:
-                    pathsInto.append(checkingNext.id)
+        if check >= 0:
+            for checking in self.vert_dict[check].getNeighbors():
+                for checkingNext in self.vert_dict[checking.id].getNeighbors():
+                    if checkingNext.id == check and check >= 0:
+                        pathsInto.append(checkingNext.id)
         return pathsInto
+
+    def placementChecker(self, position, width, length, angle):
+        ablePaths = True
+        print(angle)
+        if angle == 0:
+            for checking in range(0, width):
+                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+                    ablePaths = False
+            for checking in range(0, length):
+                if not self.checkEnterable(position + checking*100) or (position + checking*100) < 0:
+                    ablePaths = False
+            return ablePaths
+        elif angle == 90:
+            for checking in range(0, width):
+                if not self.checkEnterable(position + checking*100 - (width-1)*100) or (position + checking*100 - (width-1)*100) < 0:
+                    ablePaths = False
+            for checking in range(0, length):
+                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+                    ablePaths = False
+            return ablePaths
+        elif angle == 180:
+            for checking in range(0, width):
+                if not self.checkEnterable(position + checking - (width-1)) or (position + checking - (width-1)) < 0:
+                    ablePaths = False
+            for checking in range(0, length):
+                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+                    ablePaths = False
+            return ablePaths            
+        elif angle == 270:
+            for checking in range(0, width):
+                if not self.checkEnterable(position + checking*100) or (position + checking*100) < 0:
+                    ablePaths = False
+            for checking in range(0, length):
+                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+                    ablePaths = False
+            return ablePaths            
 
     def printSet(self, distances):
         for y in range(0, self.height):
@@ -320,3 +379,5 @@ class Graph:
             current = path.pop()
             self.putExistance(person, current)
             
+    def addEntity(self, entity):
+        self.entityList.append(entity)
