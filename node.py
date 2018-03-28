@@ -3,6 +3,7 @@ from multiprocessing import Queue
 import heapq
 import datetime
 import Person
+import GUI
 
 class Vertex:
     def __init__(self, node):
@@ -266,9 +267,12 @@ class Graph:
             cameFrom, currentCost = self.aStar(start, goal)
             current = goal
             path = []
-            while current != start:
+            while current != start:                
                 path.append(current)
-                current = cameFrom[current]
+                try:
+                    current = cameFrom[current]
+                except KeyError as error:
+                    return []
         else:
             self.addEdgesFrom(goal, 'all', checker)
             cameFrom, currentCost = self.aStar(start, goal)
@@ -277,7 +281,10 @@ class Graph:
             path = []
             while current != start:
                 path.append(current)
-                current = cameFrom[current]
+                try:
+                    current = cameFrom[current]
+                except KeyError as error:
+                    return []
             path[0] = "f%d" %(path[0])
         return path
 
@@ -293,38 +300,41 @@ class Graph:
     def placementChecker(self, position, width, length, angle):
         ablePaths = True
         print(angle)
-        if angle == 0:
-            for checking in range(0, width):
-                if not self.checkEnterable(position + checking) or (position + checking) < 0:
-                    ablePaths = False
-            for checking in range(0, length):
-                if not self.checkEnterable(position + checking*100) or (position + checking*100) < 0:
-                    ablePaths = False
-            return ablePaths
-        elif angle == 90:
-            for checking in range(0, width):
-                if not self.checkEnterable(position + checking*100 - (width-1)*100) or (position + checking*100 - (width-1)*100) < 0:
-                    ablePaths = False
-            for checking in range(0, length):
-                if not self.checkEnterable(position + checking) or (position + checking) < 0:
-                    ablePaths = False
-            return ablePaths
-        elif angle == 180:
-            for checking in range(0, width):
-                if not self.checkEnterable(position + checking - (width-1)) or (position + checking - (width-1)) < 0:
-                    ablePaths = False
-            for checking in range(0, length):
-                if not self.checkEnterable(position + checking) or (position + checking) < 0:
-                    ablePaths = False
-            return ablePaths            
-        elif angle == 270:
-            for checking in range(0, width):
-                if not self.checkEnterable(position + checking*100) or (position + checking*100) < 0:
-                    ablePaths = False
-            for checking in range(0, length):
-                if not self.checkEnterable(position + checking) or (position + checking) < 0:
-                    ablePaths = False
-            return ablePaths            
+        if not self.checkEnterable(position) or position < 0:
+            ablePaths = False
+        return ablePaths
+##        if angle == 0:
+##            for checking in range(0, width):
+##                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+##                    ablePaths = False
+##            for checking in range(0, length):
+##                if not self.checkEnterable(position + checking*100) or (position + checking*100) < 0:
+##                    ablePaths = False
+##            return ablePaths
+##        elif angle == 90:
+##            for checking in range(0, width):
+##                if not self.checkEnterable(position + checking*100 - (width-1)*100) or (position + checking*100 - (width-1)*100) < 0:
+##                    ablePaths = False
+##            for checking in range(0, length):
+##                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+##                    ablePaths = False
+##            return ablePaths
+##        elif angle == 180:
+##            for checking in range(0, width):
+##                if not self.checkEnterable(position + checking - (width-1)) or (position + checking - (width-1)) < 0:
+##                    ablePaths = False
+##            for checking in range(0, length):
+##                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+##                    ablePaths = False
+##            return ablePaths            
+##        elif angle == 270:
+##            for checking in range(0, width):
+##                if not self.checkEnterable(position + checking*100) or (position + checking*100) < 0:
+##                    ablePaths = False
+##            for checking in range(0, length):
+##                if not self.checkEnterable(position + checking) or (position + checking) < 0:
+##                    ablePaths = False
+##            return ablePaths            
 
     def printSet(self, distances):
         for y in range(0, self.height):
@@ -378,6 +388,6 @@ class Graph:
             self.removeExistance(current)
             current = path.pop()
             self.putExistance(person, current)
-            
+        
     def addEntity(self, entity):
         self.entityList.append(entity)

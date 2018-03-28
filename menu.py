@@ -1,33 +1,46 @@
 import pygame
+import spriteLoader
 
-class Menu:
-  def __init__(self):
-    self.active = False
-    self.topLeftImage = pygame.image.load('img/Frame/topLeft.png').convert_alpha()
-    self.topRightImage = pygame.image.load('img/Frame/topRight.png').convert_alpha()
-    self.bottomLeftImage = pygame.image.load('img/Frame/bottomLeft.png').convert_alpha()
-    self.bottomRightImage = pygame.image.load('img/Frame/bottomRight.png').convert_alpha()
+class MenuSprite:
+  def __init__(self, x, y):
+    self.spriteSheet = spriteLoader.spriteLoader("img/Frame/menuSpriteSheet.png")
+    self.image = self.spriteSheet.getImage(x, y, 42, 42)
 
-  def update(self, centerPos):
-    if self.active == True:
-      self.tlRect = self.topLeftImage.get_rect(topleft=centerPos)
-      self.trRect = self.topRightImage.get_rect(topleft=centerPos)
-      self.blRect = self.bottomLeftImage.get_rect(topleft=centerPos)
-      self.brRect = self.bottomRightImage.get_rect(topleft=centerPos)
-      self.tlpos = pygame.math.Vector2(centerPos)
-      self.trpos = pygame.math.Vector2(centerPos)
-      self.blpos = pygame.math.Vector2(centerPos)
-      self.brpos = pygame.math.Vector2(centerPos)
-      self.val = pygame.math.Vector2(25, 25)
-      self.brRect.topleft = self.brpos + self.val
-      self.tlRect.topleft = self.tlpos - self.val
-      self.val = pygame.math.Vector2(-25, 25)
-      self.trRect.topleft = self.trpos - self.val
-      self.blRect.topleft = self.blpos + self.val
+class topMenu(pygame.sprite.Sprite):
+  def __init__(self, layer, location, playerView = None):
+    self.pos = pygame.math.Vector2(location)
+    self._layer = layer
+    self.playerView = playerView
+    self.image = MenuSprite(42, 0).image
+    self.rect = self.image.get_rect(topleft=location)
+    pygame.sprite.Sprite.__init__(self)
     
-  def draw_self(self, window):
-    if self.active == True:
-      window.blit(self.topLeftImage, self.tlRect)
-      window.blit(self.topRightImage, self.trRect)
-      window.blit(self.bottomLeftImage, self.blRect)
-      window.blit(self.bottomRightImage, self.brRect)
+  def update(self):
+    self.rect.x = self.pos.x + self.playerView.cameraPos.x
+    self.rect.y = self.pos.y + self.playerView.cameraPos.y
+
+class topLeftMenu(pygame.sprite.Sprite):
+  def __init__(self, layer, location, playerView = None):
+    self.pos = pygame.math.Vector2(location)
+    self._layer = layer
+    self.playerView = playerView
+    self.image = MenuSprite(0, 0).image
+    self.rect = self.image.get_rect(topleft=location)
+    pygame.sprite.Sprite.__init__(self)
+    
+  def update(self):
+    self.rect.x = self.pos.x + self.playerView.cameraPos.x
+    self.rect.y = self.pos.y + self.playerView.cameraPos.y
+
+class topRightMenu(pygame.sprite.Sprite):
+  def __init__(self, layer, location, playerView = None):
+    self.pos = pygame.math.Vector2(location)
+    self._layer = layer
+    self.playerView = playerView
+    self.image = MenuSprite(84, 0).image
+    self.rect = self.image.get_rect(topleft=location)
+    pygame.sprite.Sprite.__init__(self)
+    
+  def update(self):
+    self.rect.x = self.pos.x + self.playerView.cameraPos.x
+    self.rect.y = self.pos.y + self.playerView.cameraPos.y

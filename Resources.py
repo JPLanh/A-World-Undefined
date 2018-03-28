@@ -2,9 +2,12 @@ import pygame
 import math
 import ItemList
 
-class Tree():
-    def __init__(self, myMap, location):        
+class Tree(pygame.sprite.Sprite):
+    def __init__(self, myMap, playerView, location, layer, group):
         self.myMap = myMap
+        self.group = group
+        self._layer = layer
+        self.playerView = playerView
         self.image = pygame.image.load('img/Tree.png').convert_alpha()
         self.leaf = pygame.image.load('img/Leaf.png').convert_alpha()
         self.temp = pygame.Surface((self.leaf.get_width(), self.leaf.get_height())).convert()
@@ -14,9 +17,12 @@ class Tree():
         self.durability = self.maxDurability
         self.position = self.myMap.cordsConversion(self.pos.x/42, self.pos.y/42)
         self.destroy = None
+        pygame.sprite.Sprite.__init__(self, group)
         
     def update(self):
-        itemGenerator = ItemList.itemList()
+        self.rect.x = self.pos.x + self.playerView.cameraPos.x
+        self.rect.y = self.pos.y + self.playerView.cameraPos.y
+        itemGenerator = ItemList.itemList(self.group)
         self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
         self.myMap.removeEdgesFrom(self.position, 'into')
         if self.destroy:
@@ -33,17 +39,12 @@ class Tree():
                 self.myMap.entityList.append(itemGenerator.createItem("Log", self.myMap, self.pos.x-(42*5), self.pos.y, 'left'))
 
     def draw_self(self, window, playerView):
-        #if not self.destroy:
-        window.blit(self.image, self.pos+playerView.cameraPos)
-        self.temp.blit(window, -(self.pos+playerView.cameraPos+(-self.image.get_width()/2, -self.image.get_height()/2)))
-        self.temp.blit(self.leaf, (0, 0))
-        self.temp.set_alpha(210)            
-        window.blit(self.temp, self.pos+playerView.cameraPos+(-self.image.get_width()/2, -self.image.get_height()/2))
         if self.durability < self.maxDurability:
           pygame.draw.rect(window, (0, 0, 0), (self.pos.x+playerView.cameraPos.x, self.pos.y+playerView.cameraPos.y+21, 42*(self.durability/self.maxDurability), 10), 1)
 
 class Trunk():
     def __init__(self, myMap, location):
+        pygame.sprite.Sprite.__init__(self)
         self.myMap = myMap
         self.image = pygame.image.load('img/Tree.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=location)
@@ -65,10 +66,12 @@ class Trunk():
         if self.durability < self.maxDurability:
           pygame.draw.rect(window, (0, 0, 0), (self.pos.x+playerView.cameraPos.x, self.pos.y+playerView.cameraPos.y+21, 42*(self.durability/self.maxDurability), 10), 1)
 
-class Wall():
-    def __init__(self, name, imgName, myMap, location, getWeight, getWidth, getHeight, direction):
+class Wall(pygame.sprite.Sprite):
+    def __init__(self, name, imgName, myMap, playerView, location, getWeight, getWidth, getHeight, direction, layer, group):
+        self._layer = layer
         self.myMap = myMap
         self.angle = 0
+        self.playerView = playerView
         self.image = pygame.image.load(imgName).convert_alpha()
         self.weight = getWeight
         self.width = getWidth
@@ -91,24 +94,22 @@ class Wall():
         elif direction == 'down':
             self.rotate(-90)
         self.updateEdges('remove')
+        pygame.sprite.Sprite.__init__(self, group)
 
     def update(self):
+        self.rect.x = self.pos.x + self.playerView.cameraPos.x
+        self.rect.y = self.pos.y + self.playerView.cameraPos.y
         if self.destroy:
             self.myMap.entityList.remove(self)
             self.updateEdges('add')
                 
     def updateEdges(self, modify):
-        for x in range(0, int(self.rect.width/42)):
-            for y in range(0, int(self.rect.height/42)):
-                if modify == 'add':
-                    self.myMap.addEdgesFrom(self.position+x+y*100, 'all')
-                elif modify == 'remove':
-                    self.myMap.removeEdgesFrom(self.position+x+y*100, 'into')
+        if modify == 'add':
+            self.myMap.addEdgesFrom(self.position, 'all')
+        elif modify == 'remove':
+            self.myMap.removeEdgesFrom(self.position, 'into')
 
     def draw_self(self, window, playerView):
-        for y in range(0, int(self.rect.height/42)):
-            for x in range(0, int(self.rect.width/42)):
-                window.blit(self.image, (((self.position+x)%self.myMap.width)*42+playerView.cameraPos.x, (math.floor((self.position+(y*100))/self.myMap.width)*42+playerView.cameraPos.y)))
         if self.durability < self.maxDurability:
           pygame.draw.rect(window, (0, 0, 0), (self.pos.x+self.playerView.cameraPos.x, self.pos.y+self.playerView.cameraPos.y+21, 42*(self.durability/self.maxDurability), 10), 1)
 
@@ -134,10 +135,12 @@ class Wall():
         rot_image = rot_image.subsurface(rot_rect).copy()
         return rot_image
 
-class Item():
-    def __init__(self, name, imgName, myMap, location, getWeight, getWidth, getHeight, direction):
+class Item(pygame.sprite.Sprite):
+    def __init__(self, name, imgName, myMap, playerView, location, getWeight, getWidth, getHeight, direction, layer, group):
+        self._layer = layer
         self.myMap = myMap
         self.angle = 0
+        self.playerView = playerView
         self.image = pygame.image.load(imgName).convert_alpha()
         self.weight = getWeight
         self.width = getWidth
@@ -160,24 +163,22 @@ class Item():
             self.rotate(90)
         elif direction == 'down':
             self.rotate(-90)
+        pygame.sprite.Sprite.__init__(self, group)
 
     def update(self):
+        self.rect.x = self.pos.x + self.playerView.cameraPos.x
+        self.rect.y = self.pos.y + self.playerView.cameraPos.y
         if self.destroy:
             self.myMap.entityList.remove(self)
             self.updateEdges('add')
                 
     def updateEdges(self, modify):
-        for y in range(0, int(self.rect.width/42)):
-            for x in range(0, int(self.rect.height/42)):
-                if modify == 'add':
-                    self.myMap.addEdgesFrom(self.position+x+y*100, 'all')
-                elif modify == 'remove':
-                    self.myMap.removeEdgesFrom(self.position+x+y*100, 'into')
+        if modify == 'add':
+            self.myMap.addEdgesFrom(self.position, 'all')
+        elif modify == 'remove':
+            self.myMap.removeEdgesFrom(self.position, 'into')
 
     def draw_self(self, window, playerView):
-        for y in range(0, int(self.rect.height/42)):
-            for x in range(0, int(self.rect.width/42)):
-                window.blit(self.image, (((self.position+x)%self.myMap.width)*42+playerView.cameraPos.x, (math.floor((self.position+(y*100))/self.myMap.width)*42+playerView.cameraPos.y)))
         if self.durability < self.maxDurability:
           pygame.draw.rect(window, (0, 0, 0), (self.pos.x+self.playerView.cameraPos.x, self.pos.y+self.playerView.cameraPos.y+21, 42*(self.durability/self.maxDurability), 10), 1)
 
