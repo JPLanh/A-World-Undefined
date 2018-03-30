@@ -5,11 +5,10 @@ class spriteLoader(pygame.sprite.Sprite):
     self.spriteSheet = pygame.image.load(spriteSheet)
 
   def getImage(self, x, y, width, height):
-    image = pygame.Surface([width, height])
-    image.blit(self.spriteSheet, (0, 0), (x, y, width, height))
+    image = pygame.Surface([60, 60])
+    image.blit(self.spriteSheet, (0, 0), (x, y, 60, 60))
     image.set_colorkey((0,0,0))
     return image
 
-    
-  
-    
+  def personLoader():
+    return pygame.image.load('img/Bot.png').convert_alpha()

@@ -4,26 +4,14 @@ import pygame
 import math
 import time
 import Resources
+import Entity
 
-class Person(pygame.sprite.Sprite):
-    def __init__(self, name, myMap, location, playerView, layer, group):
-        self._layer = layer
-        self.angle = 270
-        self.name = name
-        self.myMap = myMap
+class Person(Entity.Entity):
+    def __init__(self, name, mapGet, playerView, location, angle, layer):
+        Entity.Entity.__init__(self, name, "img/Person/Bot.png", mapGet, playerView, 270, pygame.math.Vector2(location), layer)
         self.generateBody()
         self.attributes = {}
-        self.playerView = playerView
         self.attributes["Strength"] = 40
-        self.image = pygame.image.load('img/Bot.png').convert_alpha()
-        self.rect = self.image.get_rect(topleft=location)
-        print(self.rect)
-        #position relative to the map
-        self.pos = pygame.math.Vector2(location)
-        #position relative to the window
-        self.relPos = pygame.math.Vector2(location)-playerView.cameraPos
-        #tile position
-        self.position = self.myMap.cordsConversion((self.pos.x+3)/42, (self.pos.y+3)/42)
         self.vel = pygame.math.Vector2(0, 0)
         self.moveProgress = pygame.math.Vector2(0, 0)
         self.path = []
@@ -33,10 +21,14 @@ class Person(pygame.sprite.Sprite):
         self.focusTarget = None
         self.destroy = False
         self.actionProgress = 0
-        pygame.sprite.Sprite.__init__(self, group)
+        print(self.pos)
+        
 
     def updatePosition(self):
-        self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
+        self.nothing = "test"
+        self.position = self.myMap.cordsConversion(int(self.pos.x), int(self.pos.y))
+#        self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
+#        self.position = self.myMap.posConversion(self.pos.x, self.pos.y, 42, 18)
         self.myMap.removeEdgesFrom(self.position, 'into')
 
     def definePath(self):
@@ -145,8 +137,8 @@ class Person(pygame.sprite.Sprite):
 
 
     def update(self):
-        self.rect.x = self.pos.x + self.playerView.cameraPos.x
-        self.rect.y = self.pos.y + self.playerView.cameraPos.y
+        self.rect.x = (self.pos.x + self.playerView.cameraOffset.x+9)*42 - ((self.pos.y+self.playerView.cameraOffset.y+7)*18) + 5
+        self.rect.y = (self.pos.y + self.playerView.cameraOffset.y+8)*18 - 45
         if self.moveProgress.x == 0 and self.moveProgress.y == 0:
             self.updatePosition()
         if not self.currentPath:

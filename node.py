@@ -4,6 +4,7 @@ import heapq
 import datetime
 import Person
 import GUI
+import pygame
 
 class Vertex:
     def __init__(self, node):
@@ -148,6 +149,14 @@ class Graph:
         else:
             return (y * self.width) + x
 
+    #conver into x, y coordinate
+    def posConversion(self, xGet, yGet, widthGet, heightGet):
+        return pygame.math.Vector2(((xGet + yGet-heightGet)/widthGet)-9, (yGet/heightGet)-8)
+
+    #convert into global x, y Coordinates
+    def prePosConversion(self, xGet, yGet, widthGet, heightGet):
+        return  pygame.math.Vector2((xGet*widthGet) - yGet*heightGet, yGet*heightGet)
+    
     def generateMap(self):
         for y in range(0, self.height):
             for x in range(0, self.width):
