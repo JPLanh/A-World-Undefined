@@ -36,7 +36,9 @@ for j in range(0, 14):
   for i in range(0, 16):      
     EG.loadEntity("Environment", "Grass", i, j, 0)
 EG.loadEntity("Player", "Jimmy", 0, 0, 270)
-##EG.loadEntity("Resource", "Tree", 12, 12, 270)
+#EG.loadEntity("Environment", "Grass", 0, 0, 0)
+#EG.loadEntity("Environment", "Grass", 1, 0, 0)
+EG.loadEntity("Resource", "Tree", 1, 0, 270)
 ##EG.loadEntity("Resource", "Tree", 12, 13, 270)
 ##EG.loadEntity("Resource", "Tree", 13, 13, 270)
 ##EG.loadEntity("Resource", "Tree", 12, 11, 270)
@@ -137,44 +139,42 @@ def game_loop():
 
       elif event.type == pygame.MOUSEBUTTONDOWN:
         mouseX, mouseY = pygame.mouse.get_pos()
-        cameraX, cameraY = playerView.cameraPos
+        cameraX, cameraY = playerView.cameraOffset
         xMouseTile, yMouseTile = mapOne.posConversion(mouseX, mouseY, 42, 18)
+        getTile = playerView.getPosition(xMouseTile, yMouseTile)
         
         if event.button == 1:
           if xMouseTile >= 0 and yMouseTile >= 0:
-            getTile = playerView.getPosition(xMouseTile, yMouseTile)
             for selected in entityGroup:
-              print("%d, %d" %(selected.position, getTile))
               if selected.position == getTile:
                 if isinstance(selected, Person.Person):
                   playerView.focusPlayer = selected
 
-          elif event.button == 3:
+        elif event.button == 3:
+          if xMouseTile >= 0 and yMouseTile >= 0:
             if playerView.focusPlayer:
               playerView.focusPlayer.stopAction()
               movable = True
               playerView.zonePosition = None
               zoneAction = []
               zoneAction.append("Move")
-              for player in entityGroup:
-                playerX, playerY, playerWidth, playerHeight = player.rect
-                if mouseX > playerX and mouseX < playerX+playerWidth:
-                  if mouseY > playerY and mouseY < playerY+playerHeight:
-                    movable = False
-                    playerView.zoneMenu(mapOne.cordsConversion(mouseX, mouseY), mouseX, mouseY)
-                    if playerView.focusPlayer == player:
-                      playerView.focusPlayer.action()                
-                    else:
-                      playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
-                      playerView.focusPlayer.focusTarget = player
-                    if isinstance(player, Resources.HarvestableNode):
-                      zoneAction.append("Harvest")
-                    elif isinstance(player, Resources.Item):
-                      zoneAction.append("Pick up")
+              for selected in entityGroup:
+                if selected.position == getTile:
+                  movable = False
+                  playerView.zoneMenu(mapOne.cordsConversion(mouseX, mouseY), mouseX, mouseY)
+                  if playerView.focusPlayer == selected:
+                    playerView.focusPlayer.action()                
+                  else:
+                    playerView.focusPlayer.newOrders = getTile
+                    playerView.focusPlayer.focusTarget = selected
+                  if isinstance(selected, Resources.HarvestableNode):
+                    zoneAction.append("Harvest")
+                  elif isinstance(selected, Resources.Item):
+                    zoneAction.append("Pick up")
               playerView.zoneAction = zoneAction
                        
               if movable:
-                playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
+                playerView.focusPlayer.newOrders = getTile
     updates()
 
 #implement searching for entity at a spot
