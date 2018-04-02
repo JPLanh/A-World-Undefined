@@ -8,7 +8,7 @@ import Entity
 
 class Person(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
-        Entity.Entity.__init__(self, name, "img/Person/Bot.png", mapGet, playerView, 270, location, layer)
+        Entity.Entity.__init__(self, name, "img/Person/Bot.png", mapGet, playerView, 270, pygame.math.Vector2(location), layer)
         self.generateBody()
         self.attributes = {}
         self.attributes["Strength"] = 40
@@ -16,22 +16,24 @@ class Person(Entity.Entity):
         self.moveProgress = pygame.math.Vector2(0, 0)
         self.path = []
         self.currentPath = None
-        self.newOrders = None
+        self.newOrders = pygame.math.Vector2(0, 0)
         self.harvesting = None
         self.focusTarget = None
         self.destroy = False
-        self.actionProgress = 0        
+        self.actionProgress = 0
+        print(self.coordinate)
+        print(self.pos)
+        
 
     def updatePosition(self):
         self.position = self.myMap.cordsConversion(int(self.pos.x), int(self.pos.y))
         self.myMap.removeEdgesFrom(self.position, 'into')
-#        print("position update %d (%d, %d)" %(self.position, self.pos.x, self.pos.y))
 
     def definePath(self):
-        destination = self.newOrders
-#        print("%s, %s" %(self.position, destination))
+        self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
+        destination = self.myMap.cordsConversion(math.floor(self.newOrders.x/42), math.floor(self.newOrders.y/42))
         self.path = self.myMap.shortestPath(self.position, destination, self)
-        self.newOrders = None
+        self.newOrders = pygame.math.Vector2(0, 0)
 
     def harvestProgress(self):
         if self.harvesting:
@@ -58,17 +60,13 @@ class Person(Entity.Entity):
                 self.myMap.addEdgesFrom(self.position, 'all')
                 self.myMap.removeEdgesFrom(self.currentPath, 'into')
                 if math.floor(self.position + 1) == self.currentPath:
-                    self.moveProgress.x = 21
-                    self.pos.x += 1
+                    self.moveProgress.x = 42
                 elif math.floor(self.position - 1) == self.currentPath:
-                    self.moveProgress.x = -21
-                    self.pos.x -= 1
+                    self.moveProgress.x = -42
                 elif math.floor(self.position - 100) == self.currentPath:
-                    self.moveProgress.y = -18
-                    self.pos.y -= 1
+                    self.moveProgress.y = -42
                 elif math.floor(self.position + 100) == self.currentPath:
-                    self.moveProgress.y = 18
-                    self.pos.y += 1
+                    self.moveProgress.y = 42
             elif isinstance(self.currentPath, str):
                 if math.floor(self.position + 1) == int(self.currentPath[1:]):
                     self.currentPath = self.position
@@ -80,14 +78,14 @@ class Person(Entity.Entity):
                     self.currentPath = self.position
 
     def update(self):
-        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18
+        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18 + 12
         self.rect.y = self.coordinate.y + self.playerView.cameraPos.y - 48
         if self.moveProgress.x == 0 and self.moveProgress.y == 0:
             self.updatePosition()
         if not self.currentPath:
-            if self.newOrders != None:
+            if self.newOrders.x != 0 and self.newOrders.y != 0 and self.position != self.myMap.cordsConversion(math.floor(self.newOrders.x/42), math.floor(self.newOrders.y/42)):
                 self.definePath()
-            elif self.newOrders is None and not self.path:
+            elif self.newOrders.x == 0 and self.newOrders.y == 0 and not self.path:
                 self.harvestProgress()
                 #not harvesting log
             if self.path:
@@ -188,31 +186,24 @@ class Person(Entity.Entity):
             
     def move(self):
         if self.moveProgress.x > 0:
-            moving = self.moveHelper("x", 1)
-            self.coordinate += moving
-#            self.pos += moving
+            self.pos += self.moveHelper("x", 1)
         elif self.moveProgress.x < 0:
-            moving = self.moveHelper("x", -1)
-            self.coordinate += moving
-#            self.pos += moving
+            self.pos += self.moveHelper("x", -1)
         elif self.moveProgress.y > 0:
-            moving = self.moveHelper("y", 1)
-            self.coordinate += moving
-#            self.pos += moving
+            self.pos += self.moveHelper("y", 1)
         elif self.moveProgress.y < 0:
-            moving = self.moveHelper("y", -1)
-            self.coordinate += moving
-#            self.pos+= moving
+            self.pos += self.moveHelper("y", -1)
 
     def moveHelper(self, axis, offset):
         if axis == "x":
             if self.moveProgress.x != 0:
-                velocity = pygame.math.Vector2(2*offset, 0)
-                self.moveProgress.x -= 1*offset
+                print(self.moveProgress.x)
+                velocity = pygame.math.Vector2(1*offset, 0)
+                self.moveProgress.x -= 3*offset
         elif axis == "y":
             if self.moveProgress.y != 0:
-                velocity = pygame.math.Vector2(-1.05*offset, 1*offset)
-                self.moveProgress.y -= 1*offset
+                velocity = pygame.math.Vector2(0, 3*offset)
+                self.moveProgress.y -= 3*offset
         return velocity
             
     def getDestination(self, goal):

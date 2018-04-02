@@ -12,17 +12,15 @@ class Entity(pygame.sprite.Sprite):
     self.angle = angle
     self.myMap = mapLocation
     self.playerView = playerView
-    #in relative to the world
-    self.pos = cordPosition
-    #place on the window
-    self.coordinate = self.myMap.prePosConversion(cordPosition.x+9, cordPosition.y+8, 42, 18)
+    self.pos = self.myMap.posConversion(cordPosition.x, cordPosition.y, 42, 18)
+    self.coordinate = self.myMap.prePosConversion(self.pos.x+9, self.pos.y+8, 42, 18)
     self.position = self.myMap.cordsConversion(self.pos.x, self.pos.y)
     self._layer = layer
     self.image = spriteLoader.spriteLoader(entityType).getImage(0, 0, constant.TILE_WIDTH_SIZE, constant.TILE_HEIGHT_SIZE)
     if entityType == "img/Leaf.png":    
       self.image = spriteLoader.spriteLoader(entityType).getImage(0, 0, constant.TILE_WIDTH_SIZE, constant.TILE_HEIGHT_SIZE)
       self.image.set_alpha(155)
-    self.rect = self.image.get_rect(topleft=self.coordinate)
+    self.rect = self.image.get_rect(topleft=cordPosition)
 
 class EntityGenerator:
   def __init__(self, renderGroup, outGroup, floorGroup, mapGet, playerView):
@@ -33,21 +31,20 @@ class EntityGenerator:
     self.playerView = playerView
 
   def loadEntity(self, typeGet, name, xGet, yGet, angle):
-#    cordPosition = self.mapGet.prePosConversion(xGet, yGet, 42, 18)
-    cordPosition = pygame.math.Vector2(xGet, yGet)
+    cordPosition = self.mapGet.prePosConversion(xGet+9, yGet+8, 42, 18)
     if typeGet == "Player":
       tempEntity = Person.Person(name, self.mapGet, self.playerView,
                                  cordPosition, angle, 250)
       self.renderGroup.add(tempEntity)
     elif typeGet == "Resource":
+      cordPosition = pygame.math.Vector2((constant.TILE_WIDTH_SIZE*xGet,constant.TILE_HEIGHT_SIZE*yGet))
       if (name == "Tree"):
-        print("Tree load")
         tempEntity = Resources.HarvestableNode(name, self.mapGet, self.playerView,
                                  cordPosition, angle, 25)
-        self.renderGroup.add(tempEntity)
+        self.outGroup.add(tempEntity)
         tempEntity = Resources.NonHarvestableNode(name, self.mapGet, self.playerView,
                                  cordPosition, angle, 30)      
-        self.renderGroup.add(tempEntity)
+        self.outGroup.add(tempEntity)
     elif typeGet == "Wall":
       tempEntity = Resources.Wall(name, self.mapGet, self.playerView,
                                  cordPosition, angle, 25)

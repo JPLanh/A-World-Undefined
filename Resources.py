@@ -7,22 +7,19 @@ import Entity
 class HarvestableNode(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
         Entity.Entity.__init__(self, name, "img/Bark.png", mapGet, playerView, 270, location, layer)
-        print(self.position)
 
     def update(self):
-        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18
-        self.rect.y = self.coordinate.y + self.playerView.cameraPos.y
-        self.myMap.removeEdgesFrom(self.position, 'into')
-                       
+        self.rect.x = self.pos.x + self.playerView.cameraPos.x
+        self.rect.y = self.pos.y + self.playerView.cameraPos.y
+
 class NonHarvestableNode(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
         Entity.Entity.__init__(self, name, "img/Leaf.png", mapGet, playerView, 270, location, layer)
 
     def update(self):
-        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18
-        self.rect.y = self.coordinate.y + self.playerView.cameraPos.y - 48
-        self.myMap.removeEdgesFrom(self.position, 'into')
-                       
+        self.rect.x = self.pos.x + self.playerView.cameraPos.x
+        self.rect.y = self.pos.y + self.playerView.cameraPos.y
+
 class Wall(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
         Entity.Entity.__init__(self, name, "img/Log.png", mapGet, playerView, 270, location, layer)
@@ -86,4 +83,4 @@ class Item(Entity.Entity):
 
 class Floor(Entity.Entity):
     def __init__(self, name, imgName, mapGet, playerView, location, angle, layer):
-        Entity.Entity.__init__(self, name, imgName, mapGet, playerView, 270, location, layer)
+        Entity.Entity.__init__(self, name, imgName, mapGet, playerView, 270, pygame.math.Vector2(location), layer)

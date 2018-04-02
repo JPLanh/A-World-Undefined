@@ -149,11 +149,11 @@ class Graph:
         else:
             return (y * self.width) + x
 
-    #get tile position
+    #conver into x, y coordinate
     def posConversion(self, xGet, yGet, widthGet, heightGet):
-        return pygame.math.Vector2(((xGet + yGet)/widthGet) - 9, (yGet/heightGet)-8)
+        return pygame.math.Vector2(((xGet + yGet-heightGet)/widthGet)-9, (yGet/heightGet)-8)
 
-    #Get the actual position
+    #convert into global x, y Coordinates
     def prePosConversion(self, xGet, yGet, widthGet, heightGet):
         return  pygame.math.Vector2((xGet*widthGet) - yGet*heightGet, yGet*heightGet)
     
