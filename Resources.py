@@ -7,38 +7,33 @@ import Entity
 class HarvestableNode(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
         Entity.Entity.__init__(self, name, "img/Bark.png", mapGet, playerView, 270, location, layer)
+        print(self.position)
 
     def update(self):
-        self.rect.x = self.pos.x + self.playerView.cameraPos.x
-        self.rect.y = self.pos.y + self.playerView.cameraPos.y
-
+        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18
+        self.rect.y = self.coordinate.y + self.playerView.cameraPos.y
+        self.myMap.removeEdgesFrom(self.position, 'into')
+                       
 class NonHarvestableNode(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
         Entity.Entity.__init__(self, name, "img/Leaf.png", mapGet, playerView, 270, location, layer)
 
     def update(self):
-        self.rect.x = self.pos.x + self.playerView.cameraPos.x
-        self.rect.y = self.pos.y + self.playerView.cameraPos.y
-
+        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18
+        self.rect.y = self.coordinate.y + self.playerView.cameraPos.y - 48
+        self.myMap.removeEdgesFrom(self.position, 'into')
+                       
 class Wall(Entity.Entity):
     def __init__(self, name, mapGet, playerView, location, angle, layer):
-        Entity.Entity.__init__(self, name, "img/Log.png", mapGet, playerView, 270, location, layer)
+        Entity.Entity.__init__(self, name, "img/"+name+".png", mapGet, playerView, 270, location, layer)
         self.maxDurability = 100
         self.myMap.removeEdgesFrom(self.position, 'into')
         self.durability = self.maxDurability
-        if angle == 180:
-            self.image = self.rotateHelper(self.image, 90)
-            self.image = self.rotateHelper(self.image, 90)
-        elif angle == 90:
-            self.image = self.rotateHelper(self.image, 90)
-        elif angle == 270:
-            self.image = self.rotateHelper(self.image, -90)
 
     def update(self):
-        self.rect.x = self.pos.x + self.playerView.cameraPos.x
-        self.rect.y = self.pos.y + self.playerView.cameraPos.y
-        if self.durability < 1:
-            self.myMap.addEdgesFrom(self.position, 'all')
+        self.rect.x = (self.coordinate.x + self.playerView.cameraPos.x) + (self.coordinate.y + self.playerView.cameraPos.y)/18 - 12
+        self.rect.y = self.coordinate.y + self.playerView.cameraPos.y - 42
+        self.myMap.removeEdgesFrom(self.position, 'into')
                 
     def draw_self(self, window, playerView):
         if self.durability < self.maxDurability:
@@ -83,4 +78,4 @@ class Item(Entity.Entity):
 
 class Floor(Entity.Entity):
     def __init__(self, name, imgName, mapGet, playerView, location, angle, layer):
-        Entity.Entity.__init__(self, name, imgName, mapGet, playerView, 270, pygame.math.Vector2(location), layer)
+        Entity.Entity.__init__(self, name, imgName, mapGet, playerView, 270, location, layer)
