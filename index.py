@@ -9,72 +9,76 @@ import Person
 import Camera
 import Resources
 import ItemList
+import menu
+import buildings
 
 FRAME_WIDTH = 800
 FRAME_HEIGHT = 600
 TILE_SIZE = 42
 TILE_WIDTH = math.floor(FRAME_WIDTH / TILE_SIZE)
 TILE_HEIGHT = math.floor(FRAME_HEIGHT / TILE_SIZE)
+MAX_X_TILES = 100
+MAX_Y_TILES = 100
 
 pygame.init()
 
-mapOne = node.Graph(100,100)
+mapOne = node.Graph(MAX_X_TILES,MAX_Y_TILES)
 BACKGROUND = mapGenerator.initialize(TILE_SIZE)
 
 gameDisplay = pygame.display.set_mode((TILE_WIDTH*TILE_SIZE,TILE_HEIGHT*TILE_SIZE))
 pygame.display.set_caption('A simulation')
-
 playerView = Camera.Camera(gameDisplay)
-itemGenerator = ItemList.itemList()
-mapOne.entityList.append(Person.Person('Jimmy', mapOne, (42*6-3, 42*4-3), playerView))
-#mapOne.entityList.append(Person.Person('Yurika', mapOne, (42*12-3, 42*8-3), playerView))
-mapOne.entityList.append(Resources.Tree(mapOne, (42*12, 42*12)))
-mapOne.entityList.append(Resources.Tree(mapOne, (42*12, 42*13)))
-mapOne.entityList.append(Resources.Tree(mapOne, (42*13, 42*13)))
-mapOne.entityList.append(Resources.Tree(mapOne, (42*12, 42*11)))
-mapOne.entityList.append(itemGenerator.createItem("Log", mapOne, 42*8, 42*7, 'left'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*5, 42*0, 'left'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*10, 42*0, 'left'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*15, 42*0, 'left'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*5, 42*0, 'down'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*19, 42*0, 'down'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*5, 42*5, 'down'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*19, 42*5, 'down'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*5, 42*9, 'left'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*8, 42*9, 'left'))
-mapOne.entityList.append(itemGenerator.createWall("Lumber", mapOne, 42*15, 42*9, 'left'))
-mapOne.entityList.append(itemGenerator.createItem("Saw", mapOne, 42*6, 42*5, 'left'))
-#mapOne.entityList.append(itemGenerator.createItem("Lumber", mapOne, 42*6, 42*5, 'left'))
 clock = pygame.time.Clock()
+#choiceMenu = menu.Menu(gameDisplay, playerView)
 
-def text():
-  message_display('pow')
+entityGroup = pygame.sprite.LayeredUpdates()
+outGroup = pygame.sprite.LayeredUpdates()
 
-def text_object(text, font):
-  #third paramset set color
-  textSurface = font.render(text, True, BLACK)
-  return textSurface, textSurface.get_rect()
+entitymover = None
 
-def message_display(text):
-  largeText = pygame.font.Font('freesansbold.ttf', 115)
-  TextSurf, TextRect = text_object(text, largeText)
-  TextRect.center = ((FRAME_WIDTH/2), (FRAME_HEIGHT/2))
-  gameDisplay.blit(TextSurf, TextRect)
+itemGenerator = ItemList.itemList(entityGroup)
 
-  pygame.display.update()
-  time.sleep(2)
+mapOne.entityList.append(Person.Person('Jimmy', mapOne, (42*6-3, 42*4-3), playerView, 25, entityGroup))
+#mapOne.entityList.append(Person.Person('Yurika', mapOne, (42*12-3, 42*8-3), playerView))
+mapOne.entityList.append(Resources.Tree(mapOne, playerView, (42*12, 42*12), 75, entityGroup))
+mapOne.entityList.append(Resources.Tree(mapOne, playerView, (42*12, 42*13), 75, entityGroup))
+mapOne.entityList.append(Resources.Tree(mapOne, playerView, (42*13, 42*13), 75, entityGroup))
+mapOne.entityList.append(Resources.Tree(mapOne, playerView, (42*12, 42*11), 75, entityGroup))
+mapOne.entityList.append(itemGenerator.createItem("Log", mapOne, playerView, 42*8, 42*7, 'left', 2))
+buildings.Lumberyard(itemGenerator, mapOne, playerView, 5, 0, 10, 7)
+mapOne.entityList.append(itemGenerator.createItem("Saw", mapOne, playerView, 42*6, 42*5, 'left', 7))
+
 
 def updates():
   gameDisplay.blit(BACKGROUND, (0, 0)+playerView.cameraPos)
-  for entities in mapOne.entityList:
-    entities.update()
-    entities.draw_self(gameDisplay, playerView)
+  entityGroup.update()
+  entityGroup.draw(gameDisplay)
+  outGroup.update()
+
+  entitymover = None
+  for i in entityGroup:
+    if i.pos.x < -playerView.cameraPos.x or i.pos.x > -playerView.cameraPos.x + FRAME_WIDTH or i.pos.y < -playerView.cameraPos.y or i.pos.y > -playerView.cameraPos.y + FRAME_HEIGHT: 
+        entitymover = i
+  if entitymover != None:
+    outGroup.add(entitymover)
+    entityGroup.remove(entitymover)
+
+  entitymover = None
+  for i in outGroup:
+    if i.pos.x >= -playerView.cameraPos.x and i.pos.x <= -playerView.cameraPos.x + FRAME_WIDTH:
+      if i.pos.y >= -playerView.cameraPos.y and i.pos.y <= -playerView.cameraPos.y + FRAME_HEIGHT:
+        entitymover = i
+  if entitymover != None:
+    entityGroup.add(entitymover)
+    outGroup.remove(entitymover)
   playerView.update()
+  #choiceMenu.update()
   pygame.display.flip()
 
   #fps configuration
   clock.tick(30)
 
+clicks = 0
 def game_loop():
 
   start = False
@@ -84,18 +88,18 @@ def game_loop():
       if event.type == pygame.QUIT:
         start = True
       elif event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_y:
-          print(mapOne.checkEnterable(705))
+        
         if event.key == pygame.K_ESCAPE:
           playerView.focusPlayer = None
+          
         if event.key == pygame.K_j:
           #drop
-            print("Dropping")
             if playerView.focusPlayer:
               if playerView.focusPlayer.Body['Left Hand'].item == playerView.focusPlayer.Body['Right Hand'].item:
                 playerView.focusPlayer.dropItem("Both")
               else:
                 playerView.focusPlayer.dropItem("Right Hand")
+                
         if event.key == pygame.K_a:
             playerView.vel.x = +10
         if event.key == pygame.K_d:
@@ -114,67 +118,41 @@ def game_loop():
       elif event.type == pygame.MOUSEBUTTONDOWN:
         mouseX, mouseY = pygame.mouse.get_pos()
         cameraX, cameraY = playerView.cameraPos
+        
         if event.button == 1:
           for player in mapOne.entityList:
             playerX, playerY, playerWidth, playerHeight = player.rect
-            if mouseX > playerX+cameraX and mouseX < playerX+playerWidth+cameraX:
-              if mouseY > playerY+cameraY and mouseY < playerY+playerHeight+cameraY:
+            if mouseX > playerX and mouseX < playerX+playerWidth:
+              if mouseY > playerY and mouseY < playerY+playerHeight:
                 if isinstance(player, Person.Person):
                   playerView.focusPlayer = player
-                elif isinstance(player, Resources.Wall):
-                  print(player.rect)
-                elif isinstance(player, Resources.Item):
-                  print(player.rect)
+
         elif event.button == 3:
           if playerView.focusPlayer:
             playerView.focusPlayer.stopAction()
             movable = True
-            #selectedEntities = getClicks(mouseX, mouseY, cameraX, cameraY)
-            #if selectedEntities:
-       #implement some sort of way to focus             
+            playerView.zonePosition = None
+            zoneAction = []
+            zoneAction.append("Move")
             for player in mapOne.entityList:
               playerX, playerY, playerWidth, playerHeight = player.rect
-              if mouseX > playerX+cameraX and mouseX < playerX+playerWidth+cameraX:
-                if mouseY > playerY+cameraY and mouseY < playerY+playerHeight+cameraY:
+              if mouseX > playerX and mouseX < playerX+playerWidth:
+                if mouseY > playerY and mouseY < playerY+playerHeight:
                   movable = False
-#                  if isinstance(player, Person.Person):
+                  playerView.zoneMenu(mapOne.cordsConversion(mouseX, mouseY), mouseX, mouseY)
                   if playerView.focusPlayer == player:
-                    playerView.focusPlayer.action()
+                    playerView.focusPlayer.action()                
                   else:
                     playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
                     playerView.focusPlayer.focusTarget = player
- #                 else:                    
-                    #implements these on the player
-##                  elif isinstance(player, Resources.Wall):
-##                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
-##                  elif isinstance(player, Resources.Tree):
-##                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
-##                    playerView.focusPlayer.harvesting = player
-##                  elif isinstance(player, Resources.Item):
-##                    playerView.focusPlayer.focusTarget = player
-##                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
-##                  elif isinstance(player, Resources.Trunk):
-##                    playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
-##                    playerView.focusPlayer.harvesting = player
-#                    break
+                  if isinstance(player, Resources.Tree):
+                    zoneAction.append("Harvest")
+                  elif isinstance(player, Resources.Item):
+                    zoneAction.append("Pick up")
+            playerView.zoneAction = zoneAction
+                     
             if movable:
               playerView.focusPlayer.newOrders = pygame.math.Vector2(mouseX-cameraX, mouseY-cameraY)
-##      elif event.type == pygame.MOUSEBUTTONUP:
-##        mouseX, mouseY = pygame.mouse.get_pos()
-##        if event.button == 1:
-##          if playerView.focusPlayer:
-##          #FIX HERE, so far it's a cross shape of a nono-section due to the next two statement
-##            if mouseX < playerX+cameraX or mouseX > playerX+playerWidth+cameraX:
-##                if mouseY < playerY+cameraY or mouseY > playerY+playerHeight+cameraY:
-##                  if mouseX > 400 and mouseY < 300:
-##                    print("Quad I")
-##                  if mouseX < 400 and mouseY < 300:
-##                    print("Quad II")
-##                  if mouseX < 400 and mouseY > 300:
-##                    print("Quad III")
-##                  if mouseX > 400 and mouseY > 300:
-##                    print("Quad IV")
-
     updates()
 
 #implement searching for entity at a spot

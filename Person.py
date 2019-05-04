@@ -5,16 +5,19 @@ import math
 import time
 import Resources
 
-class Person():
-    def __init__(self, name, myMap, location, playerView):
+class Person(pygame.sprite.Sprite):
+    def __init__(self, name, myMap, location, playerView, layer, group):
+        self._layer = layer
         self.angle = 270
         self.name = name
         self.myMap = myMap
         self.generateBody()
         self.attributes = {}
+        self.playerView = playerView
         self.attributes["Strength"] = 40
         self.image = pygame.image.load('img/Bot.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=location)
+        print(self.rect)
         #position relative to the map
         self.pos = pygame.math.Vector2(location)
         #position relative to the window
@@ -30,9 +33,7 @@ class Person():
         self.focusTarget = None
         self.destroy = False
         self.actionProgress = 0
-
-    def draw_self(self, window, playerView):
-        window.blit(self.image, self.pos+playerView.cameraPos)
+        pygame.sprite.Sprite.__init__(self, group)
 
     def updatePosition(self):
         self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
@@ -70,7 +71,7 @@ class Person():
                 self.myMap.removeEdgesFrom(self.currentPath, 'into')
                 if math.floor(self.position + 1) == self.currentPath:
                     if self.angle == 0:
-                        self.moveProgress.x = 45
+                        self.moveProgress.x = 42
                     elif self.angle == 90:
                         self.rotate(-90)
                     elif self.angle == 270:
@@ -85,12 +86,12 @@ class Person():
                     elif self.angle == 270:
                         self.rotate(-90)
                     elif self.angle == 180:
-                        self.moveProgress.x = -45
+                        self.moveProgress.x = -42
                 elif math.floor(self.position - 100) == self.currentPath:
                     if self.angle == 0:
                         self.rotate(90)
                     elif self.angle == 90:
-                        self.moveProgress.y = 45
+                        self.moveProgress.y = -42
                     elif self.angle == 270:
                         self.rotate(90)
                     elif self.angle == 180:
@@ -101,7 +102,7 @@ class Person():
                     elif self.angle == 90:
                         self.rotate(90)
                     elif self.angle == 270:
-                        self.moveProgress.y = -45
+                        self.moveProgress.y = 42
                     elif self.angle == 180:
                         self.rotate(90)
             elif isinstance(self.currentPath, str):
@@ -144,6 +145,8 @@ class Person():
 
 
     def update(self):
+        self.rect.x = self.pos.x + self.playerView.cameraPos.x
+        self.rect.y = self.pos.y + self.playerView.cameraPos.y
         if self.moveProgress.x == 0 and self.moveProgress.y == 0:
             self.updatePosition()
         if not self.currentPath:
@@ -169,12 +172,10 @@ class Person():
             if self.focusTarget.name == "Log":
                 if self.Body['Right Hand'].item.name == "Saw" or self.Body['Left Hand'].item.name == "Saw":
                     self.harvesting = self.focusTarget
-                    print("test")
         elif isinstance(self.focusTarget, Resources.Tree):
             self.harvesting = self.focusTarget
 
     def stopAction(self):
-        print("stopping")
         self.harvesting = None
         self.newOrders = pygame.math.Vector2(0, 0)
         self.path = []
@@ -185,83 +186,61 @@ class Person():
             self.Body['Right Hand'].item = item
             item.carryWeight = self.attributes['Strength']
             self.myMap.entityList.remove(item)
-            if item.angle%360 == 90:
-                item.rotate(-90)
-            elif item.angle%360 == 180:
-                item.rotate(90)
-                item.rotate(90)
-            elif item.angle%360 == 270:
-                item.rotate(90)            
+            self.itemReorientation(item)       
           elif not self.Body['Left Hand'].item:
             self.Body['Left Hand'].item = item
             item.carryWeight = self.attributes['Strength']
             self.myMap.entityList.remove(item)
-            if item.angle%360 == 90:
-                item.rotate(-90)
-            elif item.angle%360 == 180:
-                item.rotate(90)
-                item.rotate(90)
-            elif item.angle%360 == 270:
-                item.rotate(90)
+            self.itemReorientation(item)
       elif item.weight < self.attributes['Strength']*2:
           if not self.Body['Right Hand'].item and not self.Body['Left Hand'].item:
             self.Body['Right Hand'].item = item
             self.Body['Left Hand'].item = item
             item.carryWeight = self.attributes['Strength']*2
             self.myMap.entityList.remove(item)
-            if item.angle%360 == 90:
-                item.rotate(-90)
-            elif item.angle%360 == 180:
-                item.rotate(90)
-                item.rotate(90)
-            elif item.angle%360 == 270:
-                item.rotate(90)
+            self.itemReorientation(item)
 
-#ISSUE WITH DROPPING and player offset
+    def itemReorientation(self, item):
+        if item.angle%360 == 90:
+            item.rotate(-90)
+        elif item.angle%360 == 180:
+            item.rotate(90)
+            item.rotate(90)
+        elif item.angle%360 == 270:
+            item.rotate(90)
+        
+
     def dropItem(self, getHand):
         hand = None
-        if getHand == "Left Hand":
-            hand = "Left Hand"
-        elif getHand == "Right Hand":
-            hand = "Right Hand"
-        elif getHand == "Both":
-            hand = "Left Hand"
         placable = True
-        xTest = math.floor((self.pos.x - (self.Body[hand].item.rect.width-42))/42)
-        yTest = math.floor((self.pos.y - (self.Body[hand].item.rect.height-42))/42)
-        print("Player is at %d facing %d degree" %(self.position, self.angle))
-        print("%d, Length: %d, Width: %d" %(self.position, int(self.Body[hand].item.rect.width/42), int(self.Body[hand].item.rect.height/42)))
         if self.angle == 270:
-            if self.myMap.placementChecker(self.position+100, int(self.Body[hand].item.rect.width/42), int(self.Body[hand].item.rect.height/42), 270):
-                self.Body[hand].item.pos = self.pos + (3, 45)
+            if self.myMap.placementChecker(self.position+100, int(self.Body[getHand].item.rect.width/42), int(self.Body[getHand].item.rect.height/42), 270):
+                self.Body[getHand].item.pos = self.pos + (3, 45)
             else:
                 placable = False
         elif self.angle == 90:
-            if self.myMap.placementChecker(self.position-100, int(self.Body[hand].item.rect.width/42), int(self.Body[hand].item.rect.height/42), 90):
-                self.Body[hand].item.pos = self.pos - ((int(self.Body[hand].item.rect.height)), (int(self.Body[hand].item.rect.width))) + (45, 3)
+            if self.myMap.placementChecker(self.position-100, int(self.Body[getHand].item.rect.width/42), int(self.Body[getHand].item.rect.height/42), 90):
+                self.Body[getHand].item.pos = self.pos - ((int(self.Body[getHand].item.rect.height)), (int(self.Body[getHand].item.rect.width))) + (45, 3)
             else:
                 placable = False
         elif self.angle == 0:
-            if self.myMap.placementChecker(self.position+1, int(self.Body[hand].item.rect.width/42), int(self.Body[hand].item.rect.height/42), 0):
-                self.Body[hand].item.pos = self.pos + (45, 3)
+            if self.myMap.placementChecker(self.position+1, int(self.Body[getHand].item.rect.width/42), int(self.Body[getHand].item.rect.height/42), 0):
+                self.Body[getHand].item.pos = self.pos + (45, 3)
             else:
                 placable = False
         elif self.angle == 180:
-            if self.myMap.placementChecker(self.position-1, int(self.Body[hand].item.rect.width/42), int(self.Body[hand].item.rect.height/42), 180):
-                self.Body[hand].item.pos = self.pos - ((int(self.Body[hand].item.rect.width),(int(self.Body[hand].item.rect.height)))) + (3, 45)
+            if self.myMap.placementChecker(self.position-1, int(self.Body[getHand].item.rect.width/42), int(self.Body[getHand].item.rect.height/42), 180):
+                self.Body[getHand].item.pos = self.pos - ((int(self.Body[getHand].item.rect.width),(int(self.Body[getHand].item.rect.height)))) + (3, 45)
             else:
                 placable = False
         if placable:
-            while (self.Body[hand].item.angle != self.angle):
-#                print("self: %d Item: %d" %(self.angle, self.Body[hand].item.angle))
-                self.Body[hand].item.rotate(90)
-            self.Body[hand].item.position = self.myMap.cordsConversion(self.Body[hand].item.pos.x/42, self.Body[hand].item.pos.y/42)
-#            print("Player Cord: %s, position %d" %(self.pos, self.position))
-#            print("Item D Cord: %s, position %d" %(self.Body[hand].item.pos, self.Body[hand].item.position))
-            self.Body[hand].item.rect.x = self.Body[hand].item.pos.x
-            self.Body[hand].item.rect.y = self.Body[hand].item.pos.y
-            self.myMap.addEntity(self.Body[hand].item)
-            self.Body[hand].item.carryWeight = 0
+            while (self.Body[getHand].item.angle != self.angle):
+                self.Body[getHand].item.rotate(90)
+            self.Body[getHand].item.position = self.myMap.cordsConversion(self.Body[getHand].item.pos.x/42, self.Body[getHand].item.pos.y/42)
+            self.Body[getHand].item.rect.x = self.Body[getHand].item.pos.x
+            self.Body[getHand].item.rect.y = self.Body[getHand].item.pos.y
+            self.myMap.addEntity(self.Body[getHand].item)
+            self.Body[getHand].item.carryWeight = 0
             if getHand == "Left Hand" or getHand == "Both":                
                 self.Body['Left Hand'].item = None
             if getHand == "Right Hand" or getHand == "Both":
@@ -269,38 +248,32 @@ class Person():
         else:
             print('Unable to place item')
 
+    def selected(self):
+        print("%s is selected" %(self.name))
+            
     def move(self):
         if self.moveProgress.x > 0:
-            if self.moveProgress.x - 3 > 0:
-                velocity = pygame.math.Vector2(3, 0)
-                self.moveProgress.x -= 3
-            else:
-                velocity = pygame.math.Vector2(3 - self.moveProgress.x, 0)
-                self.moveProgress.x = 0
+            self.pos += self.moveHelper("x", 1)
         elif self.moveProgress.x < 0:
-            if self.moveProgress.x + 3 < 0:
-                velocity = pygame.math.Vector2(-3, 0)
-                self.moveProgress.x += 3
-            else:
-                velocity = pygame.math.Vector2(3 + self.moveProgress.x, 0)
-                self.moveProgress.x += 3
+            self.pos += self.moveHelper("x", -1)
         elif self.moveProgress.y > 0:
-            if self.moveProgress.y - 3 > 0:
-                velocity = pygame.math.Vector2(0, -3)
-                self.moveProgress.y -= 3
-            else:
-                velocity = pygame.math.Vector2(3 - self.moveProgress.y, 0)
-                self.moveProgress.y = 0
+            self.pos += self.moveHelper("y", 1)
         elif self.moveProgress.y < 0:
-            if self.moveProgress.y + 3 < 0:
-                velocity = pygame.math.Vector2(0, 3)
-                self.moveProgress.y += 3
-            else:
-                velocity = pygame.math.Vector2(3 + self.moveProgress.y, 0)
-                self.moveProgress.y = 0
-        self.pos += velocity
-        self.rect.topleft = self.pos
+            self.pos += self.moveHelper("y", -1)
+        #self.rect.topleft = self.pos
 
+    def moveHelper(self, axis, offset):
+        if axis == "x":
+            # - 3*offset
+            if self.moveProgress.x != 0:
+                velocity = pygame.math.Vector2(3*offset, 0)
+                self.moveProgress.x -= 3*offset
+        elif axis == "y":
+            if self.moveProgress.y != 0:
+                velocity = pygame.math.Vector2(0, 3*offset)
+                self.moveProgress.y -= 3*offset
+        return velocity
+            
     def getDestination(self, goal):
         self.position = self.myMap.cordsConversion(math.floor((self.pos.x+3)/42), math.floor((self.pos.y+3)/42))
         destination = self.myMap.cordsConversion(math.floor(goal.x/42), math.floor(goal.y/42))
@@ -309,11 +282,6 @@ class Person():
     def rotate(self, amount):
         self.angle = (self.angle + int(amount))%360
         self.image = self.rotateHelper(self.image, amount)
-#        for x in self.Body:
-#            if self.Body[x].item:
-#                if self.Body['Left Hand'].item == self.Body['Right Hand'].item:
-#                    if x == 'Left Hand':
-#                        self.Body[x].item.rotate(90)
 
     def rotateHelper(self, image, angle):
         original_rect = image.get_rect()
