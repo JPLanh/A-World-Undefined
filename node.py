@@ -4,6 +4,7 @@ import heapq
 import datetime
 import Person
 import GUI
+import pygame
 
 class Vertex:
     def __init__(self, node):
@@ -86,18 +87,22 @@ class Graph:
     def addEdgesFrom(self, frm, direction, cost = None, checker = None):
         if not cost:
             if direction == 'all':
-                self.addEdge(self.mapNavigation(frm, 'north'), frm, 1)
-                self.addEdge(self.mapNavigation(frm, 'east'), frm, 1)
-                self.addEdge(self.mapNavigation(frm, 'south'), frm, 1)
-                self.addEdge(self.mapNavigation(frm, 'west'), frm, 1)
-                if self.checkEnterable(self.mapNavigation(frm, 'north')):
-                    self.addEdge(frm, self.mapNavigation(frm, 'north'), 1)
-                if self.checkEnterable(self.mapNavigation(frm, 'east')):
-                    self.addEdge(frm, self.mapNavigation(frm, 'east'), 1)
-                if self.checkEnterable(self.mapNavigation(frm, 'south')):
-                    self.addEdge(frm, self.mapNavigation(frm, 'south'), 1)
-                if self.checkEnterable(self.mapNavigation(frm, 'west')):        
-                    self.addEdge(frm, self.mapNavigation(frm, 'west'), 1)
+                if ((frm - self.mapNavigation(frm, 'north')) == (self.width)):
+                    self.addEdge(self.mapNavigation(frm, 'north'), frm, 1)
+                    if self.checkEnterable(self.mapNavigation(frm, 'north')):
+                        self.addEdge(frm, self.mapNavigation(frm, 'north'), 1)
+                if (frm - self.mapNavigation(frm, 'west')) == 1:
+                    self.addEdge(self.mapNavigation(frm, 'west'), frm, 1)
+                    if self.checkEnterable(self.mapNavigation(frm, 'west')):        
+                        self.addEdge(frm, self.mapNavigation(frm, 'west'), 1)
+                if (frm - self.mapNavigation(frm, 'east')) == -1:
+                    self.addEdge(self.mapNavigation(frm, 'east'), frm, 1)
+                    if self.checkEnterable(self.mapNavigation(frm, 'east')):
+                        self.addEdge(frm, self.mapNavigation(frm, 'east'), 1)
+                if ((self.mapNavigation(frm, 'south') - frm) == (self.width)):
+                    self.addEdge(self.mapNavigation(frm, 'south'), frm, 1)
+                    if self.checkEnterable(self.mapNavigation(frm, 'south')):
+                        self.addEdge(frm, self.mapNavigation(frm, 'south'), 1)
         else:
             if direction == 'all':
                 self.addEdge(self.mapNavigation(frm, 'west'), frm, 1)        
@@ -148,6 +153,14 @@ class Graph:
         else:
             return (y * self.width) + x
 
+    #get tile position
+    def posConversion(self, xGet, yGet, widthGet, heightGet):
+        return pygame.math.Vector2(((xGet + yGet)/widthGet) - 9, (yGet/heightGet)-8)
+
+    #Get the actual position
+    def prePosConversion(self, xGet, yGet, widthGet, heightGet):
+        return  pygame.math.Vector2((xGet*widthGet) - yGet*heightGet, yGet*heightGet)
+    
     def generateMap(self):
         for y in range(0, self.height):
             for x in range(0, self.width):
@@ -166,18 +179,22 @@ class Graph:
         
         for y in range(0, self.height):
             for x in range(0, self.width):
-                self.addEdge(self.cordsConversion(x, y),
-                        self.mapNavigation(self.cordsConversion(x, y), 'north'),
-                        1)
-                self.addEdge(self.cordsConversion(x, y),
-                        self.mapNavigation(self.cordsConversion(x, y), 'east'),
-                        1)
-                self.addEdge(self.cordsConversion(x, y),
-                        self.mapNavigation(self.cordsConversion(x, y), 'south'),
-                        1)
-                self.addEdge(self.cordsConversion(x, y),
-                        self.mapNavigation(self.cordsConversion(x, y), 'west'),
-                        1)
+                if self.cordsConversion(x, y)-(self.width+1) >= 0:
+                    self.addEdge(self.cordsConversion(x, y),
+                            self.mapNavigation(self.cordsConversion(x, y), 'north'),
+                            1)
+                if (self.cordsConversion(x, y)+1)%(self.width+1) != 0:
+                    self.addEdge(self.cordsConversion(x, y),
+                            self.mapNavigation(self.cordsConversion(x, y), 'east'),
+                            1)
+                if (self.cordsConversion(x, y) + (self.width+1)) < self.width*self.height:
+                    self.addEdge(self.cordsConversion(x, y),
+                            self.mapNavigation(self.cordsConversion(x, y), 'south'),
+                            1)
+                if ((self.cordsConversion(x, y)-1) > 0 and self.cordsConversion(x, y)-1)%(self.width-1) != 0:
+                    self.addEdge(self.cordsConversion(x, y),
+                            self.mapNavigation(self.cordsConversion(x, y), 'west'),
+                            1)
                 
         
     def mapNavigation(self, getPosition, getDirection):
